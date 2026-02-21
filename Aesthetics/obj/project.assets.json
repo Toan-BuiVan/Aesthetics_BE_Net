@@ -111,20 +111,6 @@
         "runtime": {
           "bin/placeholder/Aesthetics.Entities.dll": {}
         }
-      },
-      "Aesthetics.Services/1.0.0": {
-        "type": "project",
-        "framework": ".NETCoreApp,Version=v8.0",
-        "dependencies": {
-          "Aesthetics.Data": "1.0.0",
-          "Aesthetics.Entities": "1.0.0"
-        },
-        "compile": {
-          "bin/placeholder/Aesthetics.Services.dll": {}
-        },
-        "runtime": {
-          "bin/placeholder/Aesthetics.Services.dll": {}
-        }
       }
     }
   },
@@ -486,18 +472,12 @@
       "type": "project",
       "path": "../Entities/Aesthetics.Entities.csproj",
       "msbuildProject": "../Entities/Aesthetics.Entities.csproj"
-    },
-    "Aesthetics.Services/1.0.0": {
-      "type": "project",
-      "path": "../Aesthetics.Services/Aesthetics.Services.csproj",
-      "msbuildProject": "../Aesthetics.Services/Aesthetics.Services.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net8.0": [
       "Aesthetics.Data >= 1.0.0",
       "Aesthetics.Entities >= 1.0.0",
-      "Aesthetics.Services >= 1.0.0",
       "Swashbuckle.AspNetCore >= 6.6.2"
     ]
   },
@@ -535,9 +515,6 @@
           "projectReferences": {
             "C:\\Users\\buito\\source\\Aesthetics\\Aesthetics.DataAccess\\Aesthetics.Data.csproj": {
               "projectPath": "C:\\Users\\buito\\source\\Aesthetics\\Aesthetics.DataAccess\\Aesthetics.Data.csproj"
-            },
-            "C:\\Users\\buito\\source\\Aesthetics\\Aesthetics.Services\\Aesthetics.Services.csproj": {
-              "projectPath": "C:\\Users\\buito\\source\\Aesthetics\\Aesthetics.Services\\Aesthetics.Services.csproj"
             },
             "C:\\Users\\buito\\source\\Aesthetics\\Entities\\Aesthetics.Entities.csproj": {
               "projectPath": "C:\\Users\\buito\\source\\Aesthetics\\Entities\\Aesthetics.Entities.csproj"
