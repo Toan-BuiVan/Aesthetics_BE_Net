@@ -1,5 +1,10 @@
-var builder = WebApplication.CreateBuilder(args);
+using Aesthetics.Data.AestheticsDbContext;
+using Microsoft.EntityFrameworkCore;
 
+var builder = WebApplication.CreateBuilder(args);
+var configuration = builder.Configuration;
+builder.Services.AddDbContext<AestheticsDbContext>(options =>
+			   options.UseSqlServer(configuration.GetConnectionString("aesthetics")));
 // Add services to the container.
 
 builder.Services.AddControllers();

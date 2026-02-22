@@ -9,27 +9,22 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Entities.Entities
 {
-	public class Account
+	public class Account : BaseEntity
 	{
-		[Key]
-		public int AccountID { get; set; }
-
-		[MaxLength(250)]
 		[Required]
-		public string UserName { get; set; } = null!;
+		[StringLength(250)]
+		public string UserName { get; set; }
 
-		[MaxLength(250)]
 		[Required]
-		public string PassWord { get; set; } = null!; 
+		[StringLength(250)]
+		public string PassWord { get; set; } 
 
-		public DateTime Creation { get; set; }
+		public DateTime Creation { get; set; } = DateTime.Now;
 
-		[MaxLength(250)]
+		[StringLength(250)]
 		public string? RefreshToken { get; set; }
 
 		public DateTime? TokenExpired { get; set; }
-
-		public bool DeleteStatus { get; set; }
 
 		// Navigation properties
 		public virtual ICollection<Customer> Customers { get; set; } = new List<Customer>();

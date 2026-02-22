@@ -8,20 +8,16 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Entities.Entities
 {
-	public class ClinicStaff
+	public class ClinicStaff : BaseEntity
 	{
-		[Key]
-		public int ClinicStaffID { get; set; }
+		public int ClinicId { get; set; }
 
-		public int ClinicID { get; set; }
+		public int StaffId { get; set; }
 
-		public int StaffID { get; set; }
+		[ForeignKey(nameof(ClinicId))]
+		public virtual Clinic Clinic { get; set; }
 
-		// Navigation properties
-		[ForeignKey(nameof(ClinicID))]
-		public virtual Clinic Clinic { get; set; } = null!;
-
-		[ForeignKey(nameof(StaffID))]
-		public virtual Staff Staff { get; set; } = null!;
+		[ForeignKey(nameof(StaffId))]
+		public virtual Staff Staff { get; set; }
 	}
 }

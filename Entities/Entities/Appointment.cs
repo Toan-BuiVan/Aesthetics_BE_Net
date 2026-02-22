@@ -8,40 +8,35 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Entities.Entities
 {
-	public class Appointment
+	public class Appointment : BaseEntity
 	{
-		[Key]
-		public int AppointmentID { get; set; }
+		public int CustomerId { get; set; }
 
-		public int CustomerID { get; set; }
+		public int? StaffId { get; set; }
 
-		public int? StaffID { get; set; }
-
-		public int? ServiceID { get; set; }
+		public int? ServiceId { get; set; }
 
 		public DateTime StartTime { get; set; }
 
 		public DateTime EndTime { get; set; }
 
-		public DateTime CreationDate { get; set; }
+		public DateTime CreationDate { get; set; } = DateTime.Now;
 
-		[MaxLength(50)]
+		[StringLength(50)]
 		public string? Status { get; set; }
 
-		public bool PaymentStatus { get; set; }
+		public bool PaymentStatus { get; set; } = false;
 
-		public bool DeleteStatus { get; set; }
+		[ForeignKey(nameof(CustomerId))]
+		public virtual Customer Customer { get; set; }
 
-		// Navigation properties
-		[ForeignKey(nameof(CustomerID))]
-		public virtual Customer Customer { get; set; } = null!;
-
-		[ForeignKey(nameof(StaffID))]
+		[ForeignKey(nameof(StaffId))]
 		public virtual Staff? Staff { get; set; }
 
-		[ForeignKey(nameof(ServiceID))]
+		[ForeignKey(nameof(ServiceId))]
 		public virtual Service? Service { get; set; }
 
+		// Navigation properties
 		public virtual ICollection<AppointmentAssignment> AppointmentAssignments { get; set; } = new List<AppointmentAssignment>();
 	}
 }

@@ -8,22 +8,18 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Entities.Entities
 {
-	public class ServiceProduct
+	public class ServiceProduct : BaseEntity
 	{
-		[Key]
-		public int ID { get; set; }
+		public int ServiceId { get; set; }
 
-		public int ServiceID { get; set; }
+		public int ProductId { get; set; }
 
-		public int ProductID { get; set; }
+		public int QuantityUsed { get; set; } = 0;
 
-		public int QuantityUsed { get; set; }
+		[ForeignKey(nameof(ServiceId))]
+		public virtual Service Service { get; set; }
 
-		// Navigation properties
-		[ForeignKey(nameof(ServiceID))]
-		public virtual Service Service { get; set; } = null!;
-
-		[ForeignKey(nameof(ProductID))]
-		public virtual Product Product { get; set; } = null!;
+		[ForeignKey(nameof(ProductId))]
+		public virtual Product Product { get; set; }
 	}
 }

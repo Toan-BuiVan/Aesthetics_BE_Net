@@ -7,15 +7,12 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Entities.Entities
 {
-	public class Clinic
+	public class Clinic : BaseEntity
 	{
-		[Key]
-		public int ClinicID { get; set; }
-
-		[MaxLength(255)]
+		[StringLength(255)]
 		public string? ClinicName { get; set; }
 
-		public bool ClinicStatus { get; set; }
+		public bool ClinicStatus { get; set; } = false;
 
 		// Navigation properties
 		public virtual ICollection<ClinicStaff> ClinicStaffs { get; set; } = new List<ClinicStaff>();

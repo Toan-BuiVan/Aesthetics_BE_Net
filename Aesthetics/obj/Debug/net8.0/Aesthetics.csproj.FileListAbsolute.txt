@@ -34,3 +34,4 @@ C:\Users\buito\source\Aesthetics\Aesthetics\obj\Debug\net8.0\refint\Aesthetics.d
 C:\Users\buito\source\Aesthetics\Aesthetics\obj\Debug\net8.0\Aesthetics.pdb
 C:\Users\buito\source\Aesthetics\Aesthetics\obj\Debug\net8.0\Aesthetics.genruntimeconfig.cache
 C:\Users\buito\source\Aesthetics\Aesthetics\obj\Debug\net8.0\ref\Aesthetics.dll
+C:\Users\buito\source\Aesthetics\Aesthetics\obj\Debug\net8.0\Aesthetics.sourcelink.json

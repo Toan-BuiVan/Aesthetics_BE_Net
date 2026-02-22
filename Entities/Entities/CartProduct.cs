@@ -8,31 +8,27 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Entities.Entities
 {
-	public class CartProduct
+	public class CartProduct : BaseEntity
 	{
-		[Key]
-		public int CartProductID { get; set; }
+		public int CartId { get; set; }
 
-		public int CartID { get; set; }
+		public int? ProductId { get; set; }
 
-		public int? ProductID { get; set; }
+		public int? ServiceId { get; set; }
 
-		public int? ServiceID { get; set; }
+		public int Quantity { get; set; } = 1;
 
-		public int Quantity { get; set; }
+		public decimal PriceAtAdd { get; set; } = 0;
 
-		public decimal PriceAtAdd { get; set; }
+		public DateTime CreateDate { get; set; } = DateTime.Now;
 
-		public DateTime CreateDate { get; set; }
+		[ForeignKey(nameof(CartId))]
+		public virtual Cart Cart { get; set; }
 
-		// Navigation properties
-		[ForeignKey(nameof(CartID))]
-		public virtual Cart Cart { get; set; } = null!;
-
-		[ForeignKey(nameof(ProductID))]
+		[ForeignKey(nameof(ProductId))]
 		public virtual Product? Product { get; set; }
 
-		[ForeignKey(nameof(ServiceID))]
+		[ForeignKey(nameof(ServiceId))]
 		public virtual Service? Service { get; set; }
 	}
 }

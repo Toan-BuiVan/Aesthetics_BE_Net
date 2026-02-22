@@ -8,20 +8,16 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Entities.Entities
 {
-	public class Wallet
+	public class Wallet : BaseEntity
 	{
-		[Key]
-		public int WalletID { get; set; }
+		public int CustomerId { get; set; }
 
-		public int CustomerID { get; set; }
+		public int VoucherId { get; set; }
 
-		public int VoucherID { get; set; }
+		[ForeignKey(nameof(CustomerId))]
+		public virtual Customer Customer { get; set; }
 
-		// Navigation properties
-		[ForeignKey(nameof(CustomerID))]
-		public virtual Customer Customer { get; set; } = null!;
-
-		[ForeignKey(nameof(VoucherID))]
-		public virtual Voucher Voucher { get; set; } = null!;
+		[ForeignKey(nameof(VoucherId))]
+		public virtual Voucher Voucher { get; set; }
 	}
 }

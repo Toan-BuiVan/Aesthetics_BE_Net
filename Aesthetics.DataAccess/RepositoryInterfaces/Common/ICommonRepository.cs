@@ -5,11 +5,13 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Aesthetics.Data.RepositoryInterfaces
+namespace Aesthetics.Data.RepositoryInterfaces.Common
 {
     public interface ICommonRepository<T> 
     {
-        Task<bool> UpdateEntity(T entity);
+        Task<bool> CreateEntity(T entity);
+        Task<bool> CreateRangeEntities(IEnumerable<T> entities);
+		Task<bool> UpdateEntity(T entity);
         Task<bool> UpdateRangeEntities(IEnumerable<T> entities);
 		Task<bool> DeleteEntity(T entity);
         Task<bool> DeleteRangeEntities(IEnumerable<T> entities);

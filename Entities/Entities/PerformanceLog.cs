@@ -8,28 +8,24 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Entities.Entities
 {
-	public class PerformanceLog
+	public class PerformanceLog : BaseEntity
 	{
-		[Key]
-		public int LogID { get; set; }
+		public int StaffId { get; set; }
 
-		public int StaffID { get; set; }
+		public int? InvoiceId { get; set; }
 
-		public int? InvoiceID { get; set; }
+		public decimal Commission { get; set; } = 0;
 
-		public decimal Commission { get; set; }
+		public decimal Bonus { get; set; } = 0;
 
-		public decimal Bonus { get; set; }
-
-		public DateTime LogDate { get; set; }
+		public DateTime LogDate { get; set; } = DateTime.Now;
 
 		public string? Description { get; set; }
 
-		// Navigation properties
-		[ForeignKey(nameof(StaffID))]
-		public virtual Staff Staff { get; set; } = null!;
+		[ForeignKey(nameof(StaffId))]
+		public virtual Staff Staff { get; set; }
 
-		[ForeignKey(nameof(InvoiceID))]
+		[ForeignKey(nameof(InvoiceId))]
 		public virtual Invoice? Invoice { get; set; }
 	}
 }

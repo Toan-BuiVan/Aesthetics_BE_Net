@@ -8,23 +8,19 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Entities.Entities
 {
-	public class StaffShift
+	public class StaffShift : BaseEntity
 	{
-		[Key]
-		public int ShiftID { get; set; }
-
-		public int StaffID { get; set; }
+		public int StaffId { get; set; }
 
 		public DateTime StartTime { get; set; }
 
 		public DateTime EndTime { get; set; }
 
-		public DateTime Date { get; set; } 
+		public DateTime Date { get; set; }
 
-		public bool Status { get; set; }
+		public bool Status { get; set; } = false;
 
-		// Navigation properties
-		[ForeignKey(nameof(StaffID))]
-		public virtual Staff Staff { get; set; } = null!;
+		[ForeignKey(nameof(StaffId))]
+		public virtual Staff Staff { get; set; }
 	}
 }

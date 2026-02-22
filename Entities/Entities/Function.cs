@@ -8,20 +8,16 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Entities.Entities
 {
-	public class Function
+	public class Function : BaseEntity
 	{
-		[Key]
-		public int FunctionID { get; set; }
+		[Required]
+		[StringLength(250)]
+		public string FunctionCode { get; set; }
 
-		[MaxLength(250)]
-		public string? FunctionCode { get; set; }
-
-		[MaxLength(250)]
+		[StringLength(250)]
 		public string? FunctionName { get; set; }
 
 		public string? Description { get; set; }
-
-		public bool DeleteStatus { get; set; }
 
 		// Navigation properties
 		public virtual ICollection<Permission> Permissions { get; set; } = new List<Permission>();

@@ -8,23 +8,20 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Entities.Entities
 {
-	public class Equipment
+	public class Equipment : BaseEntity
 	{
-		[Key]
-		public int EquipmentID { get; set; }
-
-		[MaxLength(250)]
+		[StringLength(250)]
 		public string? EquipmentName { get; set; }
 
-		public int ClinicID { get; set; }
+		public int ClinicId { get; set; }
 
-		[MaxLength(20)]
+		[StringLength(20)]
 		public string? Status { get; set; }
 
-		// Navigation properties
-		[ForeignKey(nameof(ClinicID))]
-		public virtual Clinic Clinic { get; set; } = null!;
+		[ForeignKey(nameof(ClinicId))]
+		public virtual Clinic Clinic { get; set; }
 
+		// Navigation properties
 		public virtual ICollection<AppointmentAssignment> AppointmentAssignments { get; set; } = new List<AppointmentAssignment>();
 	}
 }

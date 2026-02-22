@@ -8,32 +8,29 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Entities.Entities
 {
-	public class Comment
+	public class Comment : BaseEntity
 	{
-		[Key]
-		public int CommentID { get; set; }
+		public int? ProductId { get; set; }
 
-		public int? ProductID { get; set; }
+		public int? ServiceId { get; set; }
 
-		public int? ServiceID { get; set; }
+		public int CustomerId { get; set; }
 
-		public int CustomerID { get; set; }
-
-		[MaxLength(250)]
+		[StringLength(250)]
 		public string? CommentContent { get; set; }
 
-		public int Rating { get; set; }
+		[Range(1, 5)]
+		public int Rating { get; set; } = 1;
 
-		public DateTime CreationDate { get; set; }
+		public DateTime CreationDate { get; set; } = DateTime.Now;
 
-		// Navigation properties
-		[ForeignKey(nameof(ProductID))]
+		[ForeignKey(nameof(ProductId))]
 		public virtual Product? Product { get; set; }
 
-		[ForeignKey(nameof(ServiceID))]
+		[ForeignKey(nameof(ServiceId))]
 		public virtual Service? Service { get; set; }
 
-		[ForeignKey(nameof(CustomerID))]
-		public virtual Customer Customer { get; set; } = null!;
+		[ForeignKey(nameof(CustomerId))]
+		public virtual Customer Customer { get; set; }
 	}
 }

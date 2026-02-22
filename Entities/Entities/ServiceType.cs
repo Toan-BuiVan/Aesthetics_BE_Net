@@ -7,20 +7,15 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Entities.Entities
 {
-	public class ServiceType
+	public class ServiceType : BaseEntity
 	{
-		[Key]
-		public int ServiceTypeID { get; set; }
-
-		[MaxLength(250)]
+		[StringLength(250)]
 		public string? ServiceTypeName { get; set; }
 
-		[MaxLength(20)]
+		[StringLength(20)]
 		public string? ServiceCategory { get; set; }
 
 		public string? Description { get; set; }
-
-		public bool DeleteStatus { get; set; }
 
 		// Navigation properties
 		public virtual ICollection<Service> Services { get; set; } = new List<Service>();

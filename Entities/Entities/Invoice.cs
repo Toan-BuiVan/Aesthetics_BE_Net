@@ -8,49 +8,44 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Entities.Entities
 {
-	public class Invoice
+	public class Invoice : BaseEntity
 	{
-		[Key]
-		public int InvoiceID { get; set; }
+		public int? CustomerId { get; set; }
 
-		public int? CustomerID { get; set; }
+		public int? StaffId { get; set; }
 
-		public int? StaffID { get; set; }
+		public int? VoucherId { get; set; }
 
-		public int? VoucherID { get; set; }
+		public decimal DiscountValue { get; set; } = 0;
 
-		public decimal DiscountValue { get; set; }
+		public decimal TotalMoney { get; set; } = 0;
 
-		public decimal TotalMoney { get; set; }
+		public DateTime DateCreated { get; set; } = DateTime.Now;
 
-		public DateTime DateCreated { get; set; }
-
-		[MaxLength(50)]
+		[StringLength(50)]
 		public string? Status { get; set; }
 
-		public bool DeleteStatus { get; set; }
-
-		[MaxLength(50)]
+		[StringLength(50)]
 		public string? Type { get; set; }
 
-		[MaxLength(50)]
+		[StringLength(50)]
 		public string? OrderStatus { get; set; }
 
-		[MaxLength(50)]
+		[StringLength(50)]
 		public string? PaymentMethod { get; set; }
 
-		public decimal OutstandingBalance { get; set; }
+		public decimal OutstandingBalance { get; set; } = 0;
 
-		// Navigation properties
-		[ForeignKey(nameof(CustomerID))]
+		[ForeignKey(nameof(CustomerId))]
 		public virtual Customer? Customer { get; set; }
 
-		[ForeignKey(nameof(StaffID))]
+		[ForeignKey(nameof(StaffId))]
 		public virtual Staff? Staff { get; set; }
 
-		[ForeignKey(nameof(VoucherID))]
+		[ForeignKey(nameof(VoucherId))]
 		public virtual Voucher? Voucher { get; set; }
 
+		// Navigation properties
 		public virtual ICollection<InvoiceDetail> InvoiceDetails { get; set; } = new List<InvoiceDetail>();
 		public virtual ICollection<PerformanceLog> PerformanceLogs { get; set; } = new List<PerformanceLog>();
 	}

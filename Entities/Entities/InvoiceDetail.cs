@@ -8,48 +8,42 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Entities.Entities
 {
-	public class InvoiceDetail
+	public class InvoiceDetail : BaseEntity
 	{
-		[Key]
-		public int InvoiceDetailID { get; set; }
+		public int InvoiceId { get; set; }
 
-		public int InvoiceID { get; set; }
+		public int? ProductId { get; set; }
 
-		public int? ProductID { get; set; }
+		public int? ServiceId { get; set; }
 
-		public int? ServiceID { get; set; }
+		public int? VoucherId { get; set; }
 
-		public int? VoucherID { get; set; }
+		public decimal DiscountValue { get; set; } = 0;
 
-		public decimal DiscountValue { get; set; }
+		public decimal Price { get; set; } = 0;
 
-		public decimal Price { get; set; }
+		public int Quantity { get; set; } = 0;
 
-		public int Quantity { get; set; }
+		public decimal TotalMoney { get; set; } = 0;
 
-		public decimal TotalMoney { get; set; }
-
-		[MaxLength(50)]
+		[StringLength(50)]
 		public string? Status { get; set; }
 
-		public bool DeleteStatus { get; set; }
-
-		[MaxLength(50)]
+		[StringLength(50)]
 		public string? Type { get; set; }
 
-		public bool StatusComment { get; set; }
+		public bool StatusComment { get; set; } = false;
 
-		// Navigation properties
-		[ForeignKey(nameof(InvoiceID))]
-		public virtual Invoice Invoice { get; set; } = null!;
+		[ForeignKey(nameof(InvoiceId))]
+		public virtual Invoice Invoice { get; set; }
 
-		[ForeignKey(nameof(ProductID))]
+		[ForeignKey(nameof(ProductId))]
 		public virtual Product? Product { get; set; }
 
-		[ForeignKey(nameof(ServiceID))]
+		[ForeignKey(nameof(ServiceId))]
 		public virtual Service? Service { get; set; }
 
-		[ForeignKey(nameof(VoucherID))]
+		[ForeignKey(nameof(VoucherId))]
 		public virtual Voucher? Voucher { get; set; }
 	}
 }

@@ -8,28 +8,24 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Entities.Entities
 {
-	public class Permission
+	public class Permission : BaseEntity
 	{
-		[Key]
-		public int PermissionID { get; set; }
+		public int AccountId { get; set; }
 
-		public int AccountID { get; set; }
+		public int FunctionId { get; set; }
 
-		public int FunctionID { get; set; }
+		public bool IsView { get; set; } = false;
 
-		public bool IsView { get; set; }
+		public bool IsInsert { get; set; } = false;
 
-		public bool IsInsert { get; set; }
+		public bool IsUpdate { get; set; } = false;
 
-		public bool IsUpdate { get; set; }
+		public bool IsDelete { get; set; } = false;
 
-		public bool IsDelete { get; set; }
+		[ForeignKey(nameof(AccountId))]
+		public virtual Account Account { get; set; }
 
-		// Navigation properties
-		[ForeignKey(nameof(AccountID))]
-		public virtual Account Account { get; set; } = null!;
-
-		[ForeignKey(nameof(FunctionID))]
-		public virtual Function Function { get; set; } = null!;
+		[ForeignKey(nameof(FunctionId))]
+		public virtual Function Function { get; set; }
 	}
 }

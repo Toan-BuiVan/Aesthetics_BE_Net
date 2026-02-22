@@ -8,29 +8,23 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Entities.Entities
 {
-	public class AccountSession
+	public class AccountSession : BaseEntity
 	{
-		[Key]
-		public int SessionID { get; set; }
-
-		public int AccountID { get; set; }
+		public int AccountId { get; set; }
 
 		public string? Token { get; set; }
 
-		[MaxLength(250)]
+		[StringLength(250)]
 		public string? DeviceName { get; set; }
 
-		[MaxLength(250)]
+		[StringLength(250)]
 		public string? IP { get; set; }
 
-		public DateTime CreateTime { get; set; }
+		public DateTime CreateTime { get; set; } = DateTime.Now;
 
-		public DateTime? LastAccess { get; set; }
+		public DateTime LastAccess { get; set; } = DateTime.Now;
 
-		public bool DeleteStatus { get; set; }
-
-		// Navigation properties
-		[ForeignKey(nameof(AccountID))]
-		public virtual Account Account { get; set; } = null!;
+		[ForeignKey(nameof(AccountId))]
+		public virtual Account Account { get; set; }
 	}
 }

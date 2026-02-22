@@ -7,21 +7,16 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Entities.Entities
 {
-	public class Supplier
+	public class Supplier : BaseEntity
 	{
-		[Key]
-		public int SupplierID { get; set; }
-
-		[MaxLength(200)]
+		[StringLength(200)]
 		public string? SupplierName { get; set; }
 
-		[MaxLength(250)]
+		[StringLength(250)]
 		public string? Address { get; set; }
 
-		[MaxLength(250)]
+		[StringLength(250)]
 		public string? Phone { get; set; }
-
-		public bool DeleteStatus { get; set; }
 
 		// Navigation properties
 		public virtual ICollection<Product> Products { get; set; } = new List<Product>();

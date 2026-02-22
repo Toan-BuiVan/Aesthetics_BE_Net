@@ -8,54 +8,48 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Entities.Entities
 {
-	public class AppointmentAssignment
+	public class AppointmentAssignment : BaseEntity
 	{
-		[Key]
-		public int AssignmentID { get; set; }
+		public int AppointmentId { get; set; }
 
-		public int AppointmentID { get; set; }
+		public int? ClinicId { get; set; }
 
-		public int? ClinicID { get; set; }
+		public int? ServiceTypeId { get; set; }
 
-		public int? ServiceTypeID { get; set; }
+		public int? StaffId { get; set; }
 
-		public int? StaffID { get; set; }
+		public int? ServiceId { get; set; }
 
-		public int? ServiceID { get; set; }
+		public int NumberOrder { get; set; } = 0;
 
-		public int NumberOrder { get; set; }
+		public DateTime AssignedDate { get; set; } = DateTime.Now;
 
-		public DateTime AssignedDate { get; set; }
+		public bool Status { get; set; } = false;
 
-		public bool Status { get; set; }
+		public int QuantityServices { get; set; } = 0;
 
-		public bool DeleteStatus { get; set; }
+		public decimal Price { get; set; } = 0;
 
-		public int QuantityServices { get; set; }
+		public bool PaymentStatus { get; set; } = false;
 
-		public decimal Price { get; set; }
+		public int? EquipmentId { get; set; }
 
-		public bool PaymentStatus { get; set; }
+		[ForeignKey(nameof(AppointmentId))]
+		public virtual Appointment Appointment { get; set; }
 
-		public int? EquipmentID { get; set; }
-
-		// Navigation properties
-		[ForeignKey(nameof(AppointmentID))]
-		public virtual Appointment Appointment { get; set; } = null!;
-
-		[ForeignKey(nameof(ClinicID))]
+		[ForeignKey(nameof(ClinicId))]
 		public virtual Clinic? Clinic { get; set; }
 
-		[ForeignKey(nameof(ServiceTypeID))]
+		[ForeignKey(nameof(ServiceTypeId))]
 		public virtual ServiceType? ServiceType { get; set; }
 
-		[ForeignKey(nameof(StaffID))]
+		[ForeignKey(nameof(StaffId))]
 		public virtual Staff? Staff { get; set; }
 
-		[ForeignKey(nameof(ServiceID))]
+		[ForeignKey(nameof(ServiceId))]
 		public virtual Service? Service { get; set; }
 
-		[ForeignKey(nameof(EquipmentID))]
+		[ForeignKey(nameof(EquipmentId))]
 		public virtual Equipment? Equipment { get; set; }
 	}
 }
