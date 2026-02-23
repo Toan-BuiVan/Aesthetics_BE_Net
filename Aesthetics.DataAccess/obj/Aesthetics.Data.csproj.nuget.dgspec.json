@@ -54,6 +54,18 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "AutoMapper": {
+              "target": "Package",
+              "version": "[16.0.0, )"
+            },
+            "Azure.Core": {
+              "target": "Package",
+              "version": "[1.51.1, )"
+            },
+            "Castle.Core": {
+              "target": "Package",
+              "version": "[5.2.1, )"
+            },
             "EntityFramework": {
               "target": "Package",
               "version": "[6.5.1, )"
@@ -61,6 +73,10 @@
             "LinqKit.Microsoft.EntityFrameworkCore": {
               "target": "Package",
               "version": "[8.1.8, )"
+            },
+            "Microsoft.AspNetCore.Http.Abstractions": {
+              "target": "Package",
+              "version": "[2.3.9, )"
             },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
@@ -71,6 +87,26 @@
               "suppressParent": "All",
               "target": "Package",
               "version": "[8.0.16, )"
+            },
+            "Microsoft.Extensions.Configuration": {
+              "target": "Package",
+              "version": "[10.0.3, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.4, )"
+            },
+            "StackExchange.Redis": {
+              "target": "Package",
+              "version": "[2.11.3, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[8.8.0, )"
+            },
+            "XAct.Core.PCL": {
+              "target": "Package",
+              "version": "[0.0.5014, )"
             }
           },
           "imports": [

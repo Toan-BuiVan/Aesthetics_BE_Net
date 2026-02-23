@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 builder.Services.AddDbContext<AestheticsDbContext>(options =>
 			   options.UseSqlServer(configuration.GetConnectionString("aesthetics")));
+builder.Services.AddHttpContextAccessor();
 // Add services to the container.
 
 builder.Services.AddControllers();

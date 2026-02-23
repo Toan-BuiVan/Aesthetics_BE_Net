@@ -16,10 +16,10 @@ namespace Aesthetics.Data.AestheticsServices
 {
     public class ServiceTypeService : IServiceTypeService
     {
-		private readonly ILogger<SupplierSevice> _logger;
+		private readonly ILogger<ServiceTypeService> _logger;
 		private readonly IServiceTypeRepository _serviceTypeRepository;
 
-		public ServiceTypeService(ILogger<SupplierSevice> logger, IServiceTypeRepository serviceTypeRepository)
+		public ServiceTypeService(ILogger<ServiceTypeService> logger, IServiceTypeRepository serviceTypeRepository)
 		{
 			_logger = logger;
 			_serviceTypeRepository = serviceTypeRepository;
