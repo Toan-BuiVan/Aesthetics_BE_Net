@@ -9,6 +9,9 @@ using Aesthetics.Data.AestheticsDbContext;
 using Microsoft.EntityFrameworkCore;
 using Aesthetics.Entities.Entities;
 using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System.Data.Entity.Infrastructure;
+using System.Runtime.CompilerServices;
 
 namespace Aesthetics.Data.RepositoryServices.Common
 {
@@ -107,39 +110,57 @@ namespace Aesthetics.Data.RepositoryServices.Common
 
 		}
 
-		public async Task<bool> DeleteRangeEntitiesStatus(T entity)
+		public async Task<bool> DeleteRangeEntitiesStatus(T entity) 
 		{
 			try
 			{
-				var trackedEntity = _dbContext.Set<T>().Find(entity.Id);
+				var trackedEntity = await _dbContext.Set<T>().FindAsync(entity.Id);
 				if (trackedEntity == null)
 					return false;
-				trackedEntity.DeleteStatus = true;
 
 				var entry = _dbContext.Entry(trackedEntity);
-				foreach (var navigationEntry in entry.Navigations)
-				{
-					if (navigationEntry.CurrentValue is IEnumerable<object> collection)
-					{
-						foreach (var child in collection)
-						{
-							((dynamic)child).DeleteStatus = true;
-						}
-					}
-					else if (navigationEntry.CurrentValue != null)
-					{
-						((dynamic)navigationEntry.CurrentValue).DeleteStatus = true;
-					}
-				}
+				var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
+				await SoftDeleteAsync(entry, visited);
 
-				await _dbContext.SaveChangesAsync();  
-				_logger.LogInformation("Soft Delete {Entity} - Id: {Id}", nameEntity, entity.Id);
+				await _dbContext.SaveChangesAsync();
+				_logger.LogInformation("Soft Delete {Entity} - Id: {Id}", typeof(T).Name, entity.Id);
 				return true;
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, "Soft Delete {Entity} - Id: {Id}", nameEntity, entity.Id);
+				_logger.LogError(ex, "Soft Delete {Entity} - Id: {Id}", typeof(T).Name, entity.Id);
 				return false;
+			}
+		}
+
+		private async Task SoftDeleteAsync(EntityEntry entry, HashSet<object> visited)
+		{
+			if (entry.Entity == null || !visited.Add(entry.Entity))
+				return; 
+
+			var entityType = entry.Entity.GetType().Name;
+			if (entry.Entity is BaseEntity baseEntity && entry.Entity is not Invoice && entry.Entity is not InvoiceDetail)
+			{
+				baseEntity.DeleteStatus = true;
+			}
+
+			foreach (var navigation in entry.Navigations)
+			{
+				await navigation.LoadAsync();
+
+				if (navigation.CurrentValue is IEnumerable<object> collection)
+				{
+					foreach (var child in collection)
+					{
+						var childEntry = _dbContext.Entry(child);
+						await SoftDeleteAsync(childEntry, visited);
+					}
+				}
+				else if (navigation.CurrentValue != null)
+				{
+					var childEntry = _dbContext.Entry(navigation.CurrentValue);
+					await SoftDeleteAsync(childEntry, visited);
+				}
 			}
 		}
 

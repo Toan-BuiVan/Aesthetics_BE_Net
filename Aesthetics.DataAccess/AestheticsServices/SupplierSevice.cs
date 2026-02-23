@@ -61,7 +61,13 @@ namespace Aesthetics.Data.AestheticsServices
 			try
 			{
 				_logger.LogInformation("Start deleting Supplier");
-				var deleted = await _supplierRepository.delete(supplier.Id);
+				var isSupplier = await _supplierRepository.GetById(supplier.Id);
+				if (isSupplier == null)
+				{
+					_logger.LogWarning("Delete Supplier failed: Not found with Id {Id}", supplier.Id);
+					return false;
+				}
+				var deleted = await _supplierRepository.DeleteRangeEntitiesStatus(isSupplier);
 				if (!deleted)
 				{
 					_logger.LogError("Delete Supplier failed at repository level: Id {Id}", supplier.Id);
