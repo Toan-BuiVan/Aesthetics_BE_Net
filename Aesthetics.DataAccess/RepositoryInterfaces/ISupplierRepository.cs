@@ -10,6 +10,7 @@ namespace Aesthetics.Data.RepositoryInterfaces
 {
     public interface ISupplierRepository : ICommonRepository<Supplier>
 	{
-
-    }
+        Task<Supplier?> GetByName(string name);
+		Task<bool> delete(int supplierId);
+	}
 }

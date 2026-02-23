@@ -42,7 +42,6 @@ namespace Aesthetics.Entities.Entities
 		public virtual ICollection<AppointmentAssignment> AppointmentAssignments { get; set; } = new List<AppointmentAssignment>();
 		public virtual ICollection<StaffShift> StaffShifts { get; set; } = new List<StaffShift>();
 		public virtual ICollection<PerformanceLog> PerformanceLogs { get; set; } = new List<PerformanceLog>();
-		public virtual ICollection<StaffMetric> StaffMetrics { get; set; } = new List<StaffMetric>();
 		public virtual ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
 	}
 }

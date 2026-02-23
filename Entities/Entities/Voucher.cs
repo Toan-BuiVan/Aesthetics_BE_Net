@@ -11,7 +11,6 @@ namespace Aesthetics.Entities.Entities
 	{
 		[Required]
 		[StringLength(50)]
-		[Index(IsUnique = true)]
 		public string Code { get; set; }
 
 		public string? Description { get; set; }

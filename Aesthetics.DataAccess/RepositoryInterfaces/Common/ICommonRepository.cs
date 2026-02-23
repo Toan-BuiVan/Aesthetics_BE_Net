@@ -14,7 +14,9 @@ namespace Aesthetics.Data.RepositoryInterfaces.Common
 		Task<bool> UpdateEntity(T entity);
         Task<bool> UpdateRangeEntities(IEnumerable<T> entities);
 		Task<bool> DeleteEntity(T entity);
-        Task<bool> DeleteRangeEntities(IEnumerable<T> entities);
+		Task<bool> DeleteEntitiesStatus(T entity);
+		Task<bool> DeleteRangeEntitiesStatus(T entity);
+		Task<bool> DeleteRangeEntities(IEnumerable<T> entities);
         Task<T?> GetById(int id);
 		Task<ICollection<T>> FindByPredicate(Expression<Func<T, bool>> predicate);
 	}

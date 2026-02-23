@@ -54,6 +54,27 @@ namespace Aesthetics.Data.RepositoryServices.Common
 			}
 		}
 
+		public async Task<bool> DeleteEntitiesStatus(T entity)
+		{
+			try
+			{
+				var trackedEntity = _dbContext.Set<T>().Find(entity.Id);
+
+				if (trackedEntity == null)
+					return false;
+
+				trackedEntity.DeleteStatus = true;
+				await _dbContext.SaveChangesAsync();
+				_logger.LogInformation("Soft Delete {Na} - Id: {Id}", nameEntity, entity.Id);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Soft Delete {Na} - Id: {Id}", nameEntity, entity.Id);
+				return false;
+			}
+		}
+
 		public async Task<bool> DeleteEntity(T entity)
 		{
 			try
@@ -84,6 +105,42 @@ namespace Aesthetics.Data.RepositoryServices.Common
 				return false;
 			}
 
+		}
+
+		public async Task<bool> DeleteRangeEntitiesStatus(T entity)
+		{
+			try
+			{
+				var trackedEntity = _dbContext.Set<T>().Find(entity.Id);
+				if (trackedEntity == null)
+					return false;
+				trackedEntity.DeleteStatus = true;
+
+				var entry = _dbContext.Entry(trackedEntity);
+				foreach (var navigationEntry in entry.Navigations)
+				{
+					if (navigationEntry.CurrentValue is IEnumerable<object> collection)
+					{
+						foreach (var child in collection)
+						{
+							((dynamic)child).DeleteStatus = true;
+						}
+					}
+					else if (navigationEntry.CurrentValue != null)
+					{
+						((dynamic)navigationEntry.CurrentValue).DeleteStatus = true;
+					}
+				}
+
+				await _dbContext.SaveChangesAsync();  
+				_logger.LogInformation("Soft Delete {Entity} - Id: {Id}", nameEntity, entity.Id);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Soft Delete {Entity} - Id: {Id}", nameEntity, entity.Id);
+				return false;
+			}
 		}
 
 		public async Task<ICollection<T>> FindByPredicate(Expression<Func<T, bool>> predicate)

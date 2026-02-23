@@ -1,4 +1,8 @@
 using Aesthetics.Data.AestheticsDbContext;
+using Aesthetics.Data.AestheticsInterfaces;
+using Aesthetics.Data.AestheticsServices;
+using Aesthetics.Data.RepositoryInterfaces;
+using Aesthetics.Data.RepositoryServices;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +15,12 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+//Repository
+builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
+
+//Service
+builder.Services.AddScoped<ISupplierSevice, SupplierSevice>();
 
 var app = builder.Build();
 
