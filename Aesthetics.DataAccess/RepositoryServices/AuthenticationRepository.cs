@@ -35,13 +35,19 @@ namespace Aesthetics.Data.RepositoryServices
 
 		public async Task<bool> DeleteAccountSessionAll(int? userID)
 		{
-			var entity = await _dbContext.AccountSessions.FirstOrDefaultAsync(s =>s.Id == userID);
-
-			if (entity == null)
+			if (userID == null)
 				return false;
 
-			_dbContext.AccountSessions.Remove(entity);
+			var entities = await _dbContext.AccountSessions
+				.Where(s => s.Id == userID)
+				.ToListAsync();
+
+			if (!entities.Any())
+				return false;
+
+			_dbContext.AccountSessions.RemoveRange(entities);
 			await _dbContext.SaveChangesAsync();
+
 			return true;
 		}
 
