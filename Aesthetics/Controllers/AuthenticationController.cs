@@ -18,7 +18,6 @@ namespace Aesthetics.Controllers
 		[HttpPost("login")]
 		public async Task<IActionResult> Login([FromBody] RequestLogin request)
 		{
-			
 			var result = await _authenticationService.login(request);
 			return Ok(result);
 		}

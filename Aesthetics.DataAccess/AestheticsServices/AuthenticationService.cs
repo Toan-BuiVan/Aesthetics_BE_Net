@@ -22,6 +22,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Microsoft.EntityFrameworkCore.Storage;
 using StackExchange.Redis;
+using Aesthetics.Data.AestheticsInterfaces.TokenService;
 
 namespace Aesthetics.Data.AestheticsServices
 {
@@ -32,18 +33,21 @@ namespace Aesthetics.Data.AestheticsServices
 		private Microsoft.Extensions.Configuration.IConfiguration _configuration;
 		private IHttpContextAccessor _httpContextAccessor;
 		private readonly IDistributedCache _cache;
+		private ITokenService _tokenService;
 
 		public AuthenticationService(ILogger<AuthenticationService> logger
 			, IAuthenticationRepository authenticationRepository
 			, Microsoft.Extensions.Configuration.IConfiguration configuration
 			, IHttpContextAccessor httpContextAccessor
-			, IDistributedCache cache)
+			, IDistributedCache cache
+			, ITokenService tokenService)
 		{
 			_logger = logger;
 			_authenticationRepository = authenticationRepository;
 			_configuration = configuration;
 			_httpContextAccessor = httpContextAccessor;
 			_cache = cache;
+			_tokenService = tokenService;
 		}
 		public async Task<UserLoginResponse> login(RequestLogin request)
 		{
@@ -61,12 +65,11 @@ namespace Aesthetics.Data.AestheticsServices
 					new Claim(ClaimTypes.PrimarySid, user.Id.ToString()),
 				};
 
-				//Lưu RefreshToken
-				var newToken = await CreateToken(authClaims);
+				var newToken = await _tokenService.CreateToken(authClaims);
 				_ = int.TryParse(_configuration["JWT:RefreshTokenValidityInDays"], out int refreshTokenValidityInDays);
-				var refeshToken = await GenerateRefreshToken();
+				var refeshToken = await _tokenService.GenerateRefreshToken();
 				await _authenticationRepository.UpdateRefeshToken(user.Id, refeshToken, DateTime.Now.AddDays(refreshTokenValidityInDays));
-				var DeviceName = await GetDeviceName();
+				var DeviceName = await _tokenService.GetDeviceName();
 				var remoteIpAddress = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress;
 				var cachKey = "User_" + user.Id + "_" + DeviceName;
 				var user_Session = new AccountSession
@@ -104,7 +107,7 @@ namespace Aesthetics.Data.AestheticsServices
 					return false;
 				}
 				
-				var principal = await GetPrincipalFromExpiredToken(request.AccessToken);
+				var principal = await _tokenService.GetPrincipalFromExpiredToken(request.AccessToken);
 				if (principal == null)
 				{
 					return false;
@@ -117,7 +120,7 @@ namespace Aesthetics.Data.AestheticsServices
 					return false;
 				}
 				//Lấy dữ liệu từ Redis => LogOut trên 1 thiết bị
-				var DeviceName = await GetDeviceName();
+				var DeviceName = await _tokenService.GetDeviceName();
 				var cachKey = "User_" + user.Id + "_" + DeviceName;
 				_cache.Remove(cachKey);
 				await _authenticationRepository.DeleteAccountSession(request.AccessToken, user.Id);
@@ -139,7 +142,7 @@ namespace Aesthetics.Data.AestheticsServices
 				{
 					return false;
 				}
-				var principal = await GetPrincipalFromExpiredToken(request.AccessToken);
+				var principal = await _tokenService.GetPrincipalFromExpiredToken(request.AccessToken);
 				if (principal == null)
 				{
 					return false;
@@ -159,7 +162,7 @@ namespace Aesthetics.Data.AestheticsServices
 				{
 					redisConnectionString += ",allowAdmin=true";
 				}
-				var deviceName = await GetDeviceName();
+				var deviceName = await _tokenService.GetDeviceName();
 				var cacheKey = "User_" + user.Id + "_" + deviceName;
 				using (ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync(redisConnectionString))
 				{
@@ -184,58 +187,6 @@ namespace Aesthetics.Data.AestheticsServices
 				_logger.LogError($"LogOutAll_Account Error: '{ex.Message}'. StackTrace: {ex.StackTrace}");
 				return false;
 			}
-		}
-
-		private async Task<ClaimsPrincipal?> GetPrincipalFromExpiredToken(string? token)
-		{
-			var tokenValidationParameters = new TokenValidationParameters
-			{
-				ValidateAudience = false,
-				ValidateIssuer = false,
-				ValidateIssuerSigningKey = true,
-				IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"])),
-				ValidateLifetime = false
-			};
-
-			var tokenHandler = new JwtSecurityTokenHandler();
-			var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
-			if (securityToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-				throw new SecurityTokenException("Invalid token");
-
-			return principal;
-		}
-
-		private async Task<string> GetDeviceName()
-		{
-			return Environment.MachineName;
-		}
-
-		private async Task<string> GenerateRefreshToken()
-		{
-			var randomNumber = new byte[64];
-			using var rng = RandomNumberGenerator.Create();
-			rng.GetBytes(randomNumber);
-			return Convert.ToBase64String(randomNumber);
-		}
-
-		private async Task<JwtSecurityToken> CreateToken(List<Claim> authClaims)
-		{
-			if (authClaims == null)
-			{
-				throw new ArgumentNullException(nameof(authClaims), "authClaims cannot be null");
-			}
-			var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
-			_ = int.TryParse(_configuration["JWT:TokenValidityInMinutes"], out int tokenValidityInMinutes);
-
-			var token = new JwtSecurityToken(
-				issuer: _configuration["JWT:ValidIssuer"],
-				audience: _configuration["JWT:ValidAudience"],
-				expires: DateTime.Now.AddMinutes(tokenValidityInMinutes),
-				claims: authClaims,
-				signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
-			);
-
-			return token;
 		}
 	}
 }

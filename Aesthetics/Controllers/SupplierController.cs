@@ -21,7 +21,7 @@ namespace Aesthetics.Controllers
 		}
 
 		[HttpPost("create")]
-		public async Task<bool> createsupplier(RequestSupplier supplier)
+		public async Task<bool> create(RequestSupplier supplier)
 		{
 			return await _supplierSevice.create(supplier);
 		}

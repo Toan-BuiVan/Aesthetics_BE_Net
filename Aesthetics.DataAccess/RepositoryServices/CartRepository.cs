@@ -1,0 +1,20 @@
+﻿using Aesthetics.Data.RepositoryInterfaces;
+using Aesthetics.Data.RepositoryServices.Common;
+using Aesthetics.Entities.Entities;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Aesthetics.Data.RepositoryServices
+{
+    class CartRepository : CommonRepository<Cart>, ICartRepository
+	{
+		public CartRepository(ILogger<CommonRepository<Cart>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
+		{
+
+		}
+	}
+}
