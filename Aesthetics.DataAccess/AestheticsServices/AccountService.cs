@@ -83,6 +83,16 @@ namespace Aesthetics.Data.AestheticsServices
 							DeleteStatus = false
 						};
 						await _cartRepository.CreateEntity(cart);
+
+						var referrerUser = await _customerRepository.GetUserIdByReferralCode(request.ReferralCode);
+						if (referrerUser != null)
+						{
+							await _customerRepository.UpdateAccumulatedPoints(referrerUser.Id);
+						}
+
+						/*
+						 * Thêm quyền cho khách hàng
+						 */
 						break;
 
 					case 1: 
@@ -93,6 +103,10 @@ namespace Aesthetics.Data.AestheticsServices
 							DeleteStatus = false
 						};
 						await _staffRepository.CreateEntity(staff);
+
+						/*
+						 * Thêm quyền cho nhân viên
+						 */
 						break;
 
 					default:

@@ -14,6 +14,5 @@ namespace Aesthetics.Data.AestheticsInterfaces.TokenService
 		Task<string> GenerateRefreshToken();
 		Task<JwtSecurityToken> CreateToken(List<Claim> authClaims);
 		Task<ClaimsPrincipal?> GetPrincipalFromExpiredToken(string? token);
-		Task<string> GenerateUniqueReferralCode();
 	}
 }

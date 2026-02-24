@@ -5,13 +5,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using XAct.Users;
 
 namespace Aesthetics.Data.RepositoryInterfaces
 {
-    public interface ICustomerRepository : ICommonRepository<Customer>
+    public interface IVoucherRepository : ICommonRepository<Voucher>
 	{
-		Task<Customer> GetUserIdByReferralCode(string referralCode);
-		Task UpdateAccumulatedPoints(int userId);
+		Task<string> GenCodeUnique();
 	}
 }
