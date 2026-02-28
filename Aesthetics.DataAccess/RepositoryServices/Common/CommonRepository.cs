@@ -118,6 +118,8 @@ namespace Aesthetics.Data.RepositoryServices.Common
 				if (trackedEntity == null)
 					return false;
 
+				trackedEntity.DeleteStatus = true;
+
 				var entry = _dbContext.Entry(trackedEntity);
 				var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
 				await SoftDeleteAsync(entry, visited);

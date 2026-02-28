@@ -3,10 +3,12 @@ using Aesthetics.Data.AestheticsInterfaces.TokenService;
 using Aesthetics.Data.RepositoryInterfaces;
 using Aesthetics.Data.RepositoryServices;
 using Aesthetics.Entities.Entities;
+using Aesthetics.Entities.Enum;
 using Aesthetics.Entities.Models.RequestModel;
 using Aesthetics.Entities.Models.ResponseModel;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -100,13 +102,16 @@ namespace Aesthetics.Data.AestheticsServices
 						{
 							AccountId = account.Id,
 							SalesPoints = 0,
-							DeleteStatus = false
+							EmploymentStatus = EmploymentStatus.Active,
+							Role = StaffRole.Staff,
+							DeleteStatus = false,
 						};
+						
 						await _staffRepository.CreateEntity(staff);
-
 						/*
 						 * Thêm quyền cho nhân viên
 						 */
+						
 						break;
 
 					default:
