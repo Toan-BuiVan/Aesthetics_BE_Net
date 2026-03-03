@@ -11,7 +11,7 @@ namespace Aesthetics.Entities.Entities
 {
 	public class Service : BaseEntity
 	{
-		public int ServiceTypeId { get; set; }
+		public int? ServiceTypeId { get; set; }
 
 		[StringLength(200)]
 		public string? ServiceName { get; set; }
@@ -20,9 +20,9 @@ namespace Aesthetics.Entities.Entities
 
 		public string? ServiceImage { get; set; }
 
-		public decimal Price { get; set; } = 0;
+		public decimal? Price { get; set; } = 0;
 
-		public int Duration { get; set; } = 0;
+		public int? Duration { get; set; } = 0;
 
 		[ForeignKey(nameof(ServiceTypeId))]
 		public virtual ServiceType ServiceType { get; set; }

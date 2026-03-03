@@ -10,7 +10,7 @@ namespace Aesthetics.Entities.Entities
 	public class BaseEntity
 	{
 		[Key]
-		public int Id { get; set; }
-		public bool DeleteStatus { get; set; }
+		public int? Id { get; set; }
+		public bool? DeleteStatus { get; set; }
 	}
 }

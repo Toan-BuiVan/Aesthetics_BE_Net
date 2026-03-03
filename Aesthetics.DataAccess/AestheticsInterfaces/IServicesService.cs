@@ -9,16 +9,16 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.AestheticsInterfaces
 {
-    public interface IProductService
+    public interface IServicesService
     {
-		Task<bool> create(CreateProduct product);
+		Task<bool> create(CreateService service);
 
-		Task<bool> update(updateProduct product);
+		Task<bool> update(UpdateService service);
 
-		Task<bool> delete(deleteProduct product);
+		Task<bool> delete(DeleteService service);
 
-		Task<byte[]> ExportToExcelAsync(getproduct product);
+		Task<byte[]> ExportToExcelAsync(ServiceGet service);
 
-		Task<BaseDataCollection<Product>> getlist(getproduct product);
+		Task<BaseDataCollection<Service>> getlist(ServiceGet service);
 	}
 }

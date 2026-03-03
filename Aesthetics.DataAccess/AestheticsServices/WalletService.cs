@@ -117,11 +117,11 @@ namespace Aesthetics.Data.AestheticsServices
 		{
 			try
 			{
-				Expression<Func<Wallet, bool>> predicate = x => !x.DeleteStatus;
+				Expression<Func<Wallet, bool>> predicate = x => x.DeleteStatus != true;
 
 				if (searchWallet.CustomerId > 0)
 				{
-					predicate = x => x.CustomerId == searchWallet.CustomerId && !x.DeleteStatus;
+					predicate = x => x.CustomerId == searchWallet.CustomerId && x.DeleteStatus != true;
 				}
 
 				var allMatching = await _walletRepository.FindByPredicate(predicate);

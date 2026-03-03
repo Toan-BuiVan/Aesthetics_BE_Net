@@ -80,7 +80,7 @@ namespace Aesthetics.Data.AestheticsServices
 
 						var cart = new Cart
 						{
-							CustomerId = customer.Id,
+							CustomerId = customer.Id ?? 0,
 							CreationDate = DateTime.Now,
 							DeleteStatus = false
 						};
@@ -89,7 +89,7 @@ namespace Aesthetics.Data.AestheticsServices
 						var referrerUser = await _customerRepository.GetUserIdByReferralCode(request.ReferralCode);
 						if (referrerUser != null)
 						{
-							await _customerRepository.UpdateAccumulatedPoints(referrerUser.Id);
+							await _customerRepository.UpdateAccumulatedPoints(referrerUser.Id.Value);
 						}
 
 						/*
@@ -100,13 +100,13 @@ namespace Aesthetics.Data.AestheticsServices
 					case 1: 
 						var staff = new Staff
 						{
-							AccountId = account.Id,
+							AccountId = account.Id ?? 0,
 							SalesPoints = 0,
 							EmploymentStatus = EmploymentStatus.Active,
 							Role = StaffRole.Staff,
 							DeleteStatus = false,
+							IsDoctor = request.IsDoctor,
 						};
-						
 						await _staffRepository.CreateEntity(staff);
 						/*
 						 * Thêm quyền cho nhân viên
@@ -162,11 +162,11 @@ namespace Aesthetics.Data.AestheticsServices
 		{
 			try
 			{
-				Expression<Func<Account, bool>> predicate = x => !x.DeleteStatus;
+				Expression<Func<Account, bool>> predicate = x => x.DeleteStatus != true;
 
 				if (account.Id.HasValue)
 				{
-					predicate = x => x.Id == account.Id.Value && !x.DeleteStatus;
+					predicate = x => x.Id == account.Id.Value && x.DeleteStatus != true;
 				}
 
 				if (!string.IsNullOrWhiteSpace(account.UserName))
@@ -174,7 +174,7 @@ namespace Aesthetics.Data.AestheticsServices
 					var username = account.UserName.ToLower();
 					predicate = x =>
 						x.UserName.ToLower().Contains(username)
-						&& !x.DeleteStatus;
+						&& x.DeleteStatus != true;
 				}
 
 				var allMatching = await _accountRepository.FindByPredicate(predicate);

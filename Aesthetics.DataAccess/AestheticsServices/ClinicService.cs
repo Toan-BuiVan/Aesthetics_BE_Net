@@ -93,11 +93,11 @@ namespace Aesthetics.Data.AestheticsServices
 		{
 			try
 			{
-				Expression<Func<Clinic, bool>> predicate = x => !x.DeleteStatus;
+				Expression<Func<Clinic, bool>> predicate = x => x.DeleteStatus != true;
 
 				if (searchClinic.Id.HasValue)
 				{
-					predicate = x => x.Id == searchClinic.Id.Value && !x.DeleteStatus;
+					predicate = x => x.Id == searchClinic.Id.Value && x.DeleteStatus != true;
 				}
 
 				if (!string.IsNullOrWhiteSpace(searchClinic.ClinicName))
@@ -105,7 +105,7 @@ namespace Aesthetics.Data.AestheticsServices
 					var name = searchClinic.ClinicName.ToLower();
 					predicate = x =>
 						x.ClinicName.ToLower().Contains(name)
-						&& !x.DeleteStatus;
+						&& x.DeleteStatus != true;
 				}
 
 				var allMatching = await _clinicRepository.FindByPredicate(predicate);

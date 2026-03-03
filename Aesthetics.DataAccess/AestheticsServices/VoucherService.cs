@@ -109,7 +109,7 @@ namespace Aesthetics.Data.AestheticsServices
 		{
 			try
 			{
-				var allMatching = await _voucherRepository.FindByPredicate(x => !x.DeleteStatus);
+				var allMatching = await _voucherRepository.FindByPredicate(x => x.DeleteStatus != true);
 				if (!string.IsNullOrWhiteSpace(voucher.Code))
 				{
 					var code = voucher.Code.ToLower();

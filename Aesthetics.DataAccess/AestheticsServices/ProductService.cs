@@ -103,7 +103,7 @@ namespace Aesthetics.Data.AestheticsServices
 			try
 			{
 				_logger.LogInformation("Start exporting Products to Excel");
-				Expression<Func<Product, bool>> predicate = x => !x.DeleteStatus;
+				Expression<Func<Product, bool>> predicate = x => x.DeleteStatus != true;
 				if (product.Id.HasValue)
 				{
 					predicate = predicate.And(x => x.Id == product.Id.Value);
@@ -169,7 +169,7 @@ namespace Aesthetics.Data.AestheticsServices
 		{
 			try
 			{
-				Expression<Func<Product, bool>> predicate = x => !x.DeleteStatus;
+				Expression<Func<Product, bool>> predicate = x => x.DeleteStatus != true;
 
 				if (product.Id.HasValue)
 				{
