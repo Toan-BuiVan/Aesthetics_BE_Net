@@ -9,10 +9,11 @@ namespace Aesthetics.Entities.Models.RequestModel
 {
     public class RequestAccount
     {
-		public string UserName { get; set; }
-		public string PassWord { get; set; }
-		public string ReferralCode { get; set; }
-		public int AccountType { get; set; }
+		public string? UserName { get; set; }
+		public string? PassWord { get; set; }
+		public string? ReferralCode { get; set; }
+		public int? AccountType { get; set; }
+		public bool? IsDoctor { get; set; }
 	}
 
 	public class UpdateAccount

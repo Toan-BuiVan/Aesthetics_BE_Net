@@ -10,17 +10,17 @@ namespace Aesthetics.Entities.Entities
 {
 	public class CartProduct : BaseEntity
 	{
-		public int CartId { get; set; }
+		public int? CartId { get; set; }
 
 		public int? ProductId { get; set; }
 
 		public int? ServiceId { get; set; }
 
-		public int Quantity { get; set; } = 1;
+		public int? Quantity { get; set; } = 1;
 
-		public decimal PriceAtAdd { get; set; } = 0;
+		public decimal? PriceAtAdd { get; set; }
 
-		public DateTime CreateDate { get; set; } = DateTime.Now;
+		public DateTime? CreateDate { get; set; }
 
 		[ForeignKey(nameof(CartId))]
 		public virtual Cart Cart { get; set; }

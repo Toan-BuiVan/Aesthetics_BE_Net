@@ -31,7 +31,7 @@ namespace Aesthetics.Entities.Entities
 		public string? Address { get; set; }
 		[StringLength(250)]
 		public string? IDCard { get; set; }
-		public int SalesPoints { get; set; } = 0;
+		public int? SalesPoints { get; set; } = 0;
 		public string? StaffImage { get; set; }
 		/// 
 		/// 0: Active
@@ -45,6 +45,7 @@ namespace Aesthetics.Entities.Entities
 		/// 0: Y tá
 		/// 1: Bác sĩ
 		/// 
+		public bool? IsDoctor { get; set; }  // Thêm: Xác định nếu là bác sĩ hay không
 		public DoctorLevel? DoctorLevel { get; set; }  
 		[StringLength(250)]
 		public string? Degree { get; set; }  // Thêm: Bằng cấp
