@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryInterfaces
 {
-    public interface ISupplierRepository : ICommonRepository<Supplier>
+    public interface ISupplierRepository : ICommonRepository<SupplierEntity>
 	{
-        Task<Supplier?> GetByName(string name);
+        Task<SupplierEntity?> GetByName(string name);
 		Task<bool> delete(int supplierId);
 	}
 }

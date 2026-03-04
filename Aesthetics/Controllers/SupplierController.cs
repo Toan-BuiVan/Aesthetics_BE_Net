@@ -39,7 +39,7 @@ namespace Aesthetics.Controllers
 		}
 
 		[HttpPost("paging")]
-		public async Task<BaseDataCollection<Supplier>> paging(SupplierGet supplier)
+		public async Task<BaseDataCollection<SupplierEntity>> paging(SupplierGet supplier)
 		{
 			return await _supplierSevice.getlist(supplier);
 		}

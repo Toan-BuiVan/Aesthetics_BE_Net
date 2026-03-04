@@ -12,13 +12,13 @@ using XAct.Users;
 
 namespace Aesthetics.Data.RepositoryServices
 {
-    public class CustomerRepository : CommonRepository<Customer>, ICustomerRepository
+    public class CustomerRepository : CommonRepository<CustomerEntity>, ICustomerRepository
     {
-		public CustomerRepository(ILogger<CommonRepository<Customer>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
+		public CustomerRepository(ILogger<CommonRepository<CustomerEntity>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
 		{
 		}
 
-		public async Task<Customer> GetUserIdByReferralCode(string referralCode)
+		public async Task<CustomerEntity> GetUserIdByReferralCode(string referralCode)
 		{
 			return await _dbContext.Customers.Where(s => s.ReferralCode == referralCode && s.DeleteStatus == false).FirstOrDefaultAsync();
 		}

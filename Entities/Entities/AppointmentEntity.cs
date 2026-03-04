@@ -1,0 +1,58 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Aesthetics.Entities.Entities
+{
+	[Table("Appointments")]
+	public class AppointmentEntity : Aesthetics.Entities.BaseEntity.BaseEntity
+	{
+		/// <summary>FK → Customers: khách đặt lịch</summary>
+		public int? CustomerId { get; set; }
+
+		/// <summary>FK → Staffs: bác sĩ/nhân viên thực hiện</summary>
+		public int? StaffId { get; set; }
+
+		/// <summary>FK → Services: dịch vụ đã đặt</summary>
+		public int? ServiceId { get; set; }
+
+		/// <summary>FK → CustomerTreatmentPlans: thuộc liệu trình nào (null = đơn lẻ)</summary>
+		public int? CustomerTreatmentPlanId { get; set; }
+
+		/// <summary>Thời gian bắt đầu</summary>
+		public DateTime? StartTime { get; set; }
+
+		/// <summary>Thời gian kết thúc</summary>
+		public DateTime? EndTime { get; set; }
+
+		/// <summary>Ngày tạo lịch hẹn</summary>
+		public DateTime? CreationDate { get; set; }
+
+		/// <summary>Trạng thái: DaDat, DangThucHien, HoanThanh, Huy, DoiLich</summary>
+		[MaxLength(50)]
+		public string? Status { get; set; }
+
+		/// <summary>false = Chưa thanh toán, true = Đã thanh toán</summary>
+		public bool PaymentStatus { get; set; }
+
+		// Navigation properties
+		[ForeignKey(nameof(CustomerId))]
+		public virtual CustomerEntity? Customer { get; set; }
+
+		[ForeignKey(nameof(StaffId))]
+		public virtual StaffEntity? Staff { get; set; }
+
+		[ForeignKey(nameof(ServiceId))]
+		public virtual ServiceEntity? Service { get; set; }
+
+		[ForeignKey(nameof(CustomerTreatmentPlanId))]
+		public virtual CustomerTreatmentPlanEntity? CustomerTreatmentPlan { get; set; }
+
+		public virtual ICollection<AppointmentAssignmentEntity> AppointmentAssignments { get; set; } = [];
+		public virtual CustomerTreatmentSessionEntity? CustomerTreatmentSession { get; set; }
+	}
+}

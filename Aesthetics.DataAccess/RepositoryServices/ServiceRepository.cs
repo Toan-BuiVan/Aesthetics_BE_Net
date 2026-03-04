@@ -6,19 +6,20 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryServices
 {
-    public class ServiceRepository : CommonRepository<Service>, IServiceRepository
+    public class ServiceRepository : CommonRepository<ServiceEntity>, IServiceRepository
 	{
-		public ServiceRepository(ILogger<CommonRepository<Service>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
+		public ServiceRepository(ILogger<CommonRepository<ServiceEntity>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
 		{
 
 		}
 
-		public async Task<Service?> GetByName(string name)
+		public async Task<ServiceEntity?> GetByName(string name)
 		{
 			try
 			{

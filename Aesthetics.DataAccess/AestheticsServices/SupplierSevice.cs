@@ -34,7 +34,7 @@ namespace Aesthetics.Data.AestheticsServices
 					_logger.LogWarning("Create Supplier failed: SupplierName {SupplierName}", supplier.SupplierName);
 					return false;
 				}
-				var entity = new Supplier
+				var entity = new SupplierEntity
 				{
 					SupplierName = supplier.SupplierName,
 					Address = supplier.Address.Trim(),
@@ -83,11 +83,11 @@ namespace Aesthetics.Data.AestheticsServices
 			}
 		}
 
-		public async Task<BaseDataCollection<Supplier>> getlist(SupplierGet searchSupplier)
+		public async Task<BaseDataCollection<SupplierEntity>> getlist(SupplierGet searchSupplier)
 		{
 			try
 			{
-				Expression<Func<Supplier, bool>> predicate = x => true;  
+				Expression<Func<SupplierEntity, bool>> predicate = x => true;  
 
 				if (!string.IsNullOrWhiteSpace(searchSupplier.SupplierName))
 				{
@@ -102,12 +102,12 @@ namespace Aesthetics.Data.AestheticsServices
 					.Take(searchSupplier.PageSize)
 					.ToList();
 
-				return new BaseDataCollection<Supplier>(pagedData, totalCount, searchSupplier.PageNo, searchSupplier.PageSize);
+				return new BaseDataCollection<SupplierEntity>(pagedData, totalCount, searchSupplier.PageNo, searchSupplier.PageSize);
 			}
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "GetList Supplier exception");
-				return new BaseDataCollection<Supplier>(null, 0, searchSupplier.PageNo, searchSupplier.PageSize);
+				return new BaseDataCollection<SupplierEntity>(null, 0, searchSupplier.PageNo, searchSupplier.PageSize);
 			}
 		}
 

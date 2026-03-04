@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryInterfaces
 {
-    public interface IAccountRepository : ICommonRepository<Account>
+    public interface IAccountRepository : ICommonRepository<AccountEntity>
 	{
-		Task<Account?> GetByName(string name);
+		Task<AccountEntity?> GetByName(string name);
 		Task<string> GenerateUniqueReferralCode();
 	}
 }

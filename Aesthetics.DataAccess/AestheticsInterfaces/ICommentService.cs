@@ -17,6 +17,6 @@ namespace Aesthetics.Data.AestheticsInterfaces
 
 		Task<bool> delete(DeleteComment comment);
 
-		Task<BaseDataCollection<Comment>> getlist(CommentGet comment);
+		Task<BaseDataCollection<CommentEntity>> getlist(CommentGet comment);
 	}
 }

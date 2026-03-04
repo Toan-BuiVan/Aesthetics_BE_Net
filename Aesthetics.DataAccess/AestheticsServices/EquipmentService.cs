@@ -35,7 +35,7 @@ namespace Aesthetics.Data.AestheticsServices
 					return false;
 				}
 
-				var entity = new Equipment
+				var entity = new EquipmentEntity
 				{
 					EquipmentName = equipment.EquipmentName.Trim(),
 					ClinicId = equipment.ClinicId,
@@ -90,11 +90,11 @@ namespace Aesthetics.Data.AestheticsServices
 			}
 		}
 
-		public async Task<BaseDataCollection<Equipment>> getlist(EquipmentGet searchEquipment)
+		public async Task<BaseDataCollection<EquipmentEntity>> getlist(EquipmentGet searchEquipment)
 		{
 			try
 			{
-				Expression<Func<Equipment, bool>> predicate = x => true;
+				Expression<Func<EquipmentEntity, bool>> predicate = x => true;
 
 				if (!string.IsNullOrWhiteSpace(searchEquipment.EquipmentName))
 				{
@@ -117,7 +117,7 @@ namespace Aesthetics.Data.AestheticsServices
 					.Take(searchEquipment.PageSize)
 					.ToList();
 
-				return new BaseDataCollection<Equipment>(
+				return new BaseDataCollection<EquipmentEntity>(
 					pagedData,
 					totalCount,
 					searchEquipment.PageNo,
@@ -127,7 +127,7 @@ namespace Aesthetics.Data.AestheticsServices
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "GetList Equipment exception");
-				return new BaseDataCollection<Equipment>(
+				return new BaseDataCollection<EquipmentEntity>(
 					null,
 					0,
 					searchEquipment.PageNo,

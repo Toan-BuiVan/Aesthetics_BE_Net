@@ -66,7 +66,7 @@ namespace Aesthetics.Data.AestheticsServices
 					return false;
 				}
 
-				var newWallets = new Wallet
+				var newWallets = new WalletEntity
 				{
 					CustomerId = wallet.CustomerId,
 					VoucherId = wallet.VoucherId,
@@ -113,11 +113,11 @@ namespace Aesthetics.Data.AestheticsServices
 			}
 		}
 
-		public async Task<BaseDataCollection<Wallet>> getlist(WalletGet searchWallet)
+		public async Task<BaseDataCollection<WalletEntity>> getlist(WalletGet searchWallet)
 		{
 			try
 			{
-				Expression<Func<Wallet, bool>> predicate = x => x.DeleteStatus != true;
+				Expression<Func<WalletEntity, bool>> predicate = x => x.DeleteStatus != true;
 
 				if (searchWallet.CustomerId > 0)
 				{
@@ -134,7 +134,7 @@ namespace Aesthetics.Data.AestheticsServices
 					.Take(searchWallet.PageSize)
 					.ToList();
 
-				return new BaseDataCollection<Wallet>(
+				return new BaseDataCollection<WalletEntity>(
 					pagedData,
 					totalCount,
 					searchWallet.PageNo,
@@ -144,7 +144,7 @@ namespace Aesthetics.Data.AestheticsServices
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "GetList Wallet exception");
-				return new BaseDataCollection<Wallet>(
+				return new BaseDataCollection<WalletEntity>(
 					null,
 					0,
 					searchWallet.PageNo,

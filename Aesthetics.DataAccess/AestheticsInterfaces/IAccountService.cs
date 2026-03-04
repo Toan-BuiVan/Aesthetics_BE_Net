@@ -17,6 +17,6 @@ namespace Aesthetics.Data.AestheticsInterfaces
 
 		Task<bool> delete(DeleteAccount account);
 
-		Task<BaseDataCollection<Account>> getlist(AccountGet account);
+		Task<BaseDataCollection<AccountEntity>> getlist(AccountGet account);
 	}
 }

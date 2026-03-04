@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryInterfaces
 {
-    public interface ICommentRepository : ICommonRepository<Comment>
+    public interface ICommentRepository : ICommonRepository<CommentEntity>
 	{
     }
 }

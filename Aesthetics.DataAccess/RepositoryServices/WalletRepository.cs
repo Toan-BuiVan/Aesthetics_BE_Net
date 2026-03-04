@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryServices
 {
-    public class WalletRepository : CommonRepository<Wallet>, IWalletRepository
+    public class WalletRepository : CommonRepository<WalletEntity>, IWalletRepository
 	{
-		public WalletRepository(ILogger<CommonRepository<Wallet>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
+		public WalletRepository(ILogger<CommonRepository<WalletEntity>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
 		{
 
 		}

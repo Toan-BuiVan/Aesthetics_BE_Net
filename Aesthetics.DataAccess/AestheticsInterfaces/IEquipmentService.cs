@@ -17,6 +17,6 @@ namespace Aesthetics.Data.AestheticsInterfaces
 
 		Task<bool> delete(DeleteEquipment equipment);
 
-		Task<BaseDataCollection<Equipment>> getlist(EquipmentGet equipment);
+		Task<BaseDataCollection<EquipmentEntity>> getlist(EquipmentGet equipment);
 	}
 }

@@ -36,7 +36,7 @@ namespace Aesthetics.Data.AestheticsServices
 					return false;
 				}
 
-				var entity = new ServiceType
+				var entity = new ServiceTypeEntity
 				{
 					ServiceTypeName = serviceType.ServiceTypeName,
 					ServiceCategory = serviceType.ServiceCategory.Trim(),
@@ -90,11 +90,11 @@ namespace Aesthetics.Data.AestheticsServices
 			}
 		}
 
-		public async Task<BaseDataCollection<ServiceType>> getlist(ServiceTypeGet searchServiceType)
+		public async Task<BaseDataCollection<ServiceTypeEntity>> getlist(ServiceTypeGet searchServiceType)
 		{
 			try
 			{
-				Expression<Func<ServiceType, bool>> predicate = x => true;
+				Expression<Func<ServiceTypeEntity, bool>> predicate = x => true;
 
 				if (searchServiceType.Id.HasValue)
 				{
@@ -120,12 +120,12 @@ namespace Aesthetics.Data.AestheticsServices
 					.Take(searchServiceType.PageSize)
 					.ToList();
 
-				return new BaseDataCollection<ServiceType>(pagedData, totalCount, searchServiceType.PageNo, searchServiceType.PageSize);
+				return new BaseDataCollection<ServiceTypeEntity>(pagedData, totalCount, searchServiceType.PageNo, searchServiceType.PageSize);
 			}
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "GetList ServiceType exception");
-				return new BaseDataCollection<ServiceType>(null, 0, searchServiceType.PageNo, searchServiceType.PageSize);
+				return new BaseDataCollection<ServiceTypeEntity>(null, 0, searchServiceType.PageNo, searchServiceType.PageSize);
 			}
 		}
 

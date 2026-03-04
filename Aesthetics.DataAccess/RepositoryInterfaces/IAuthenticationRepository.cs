@@ -10,11 +10,11 @@ using XAct.Users;
 
 namespace Aesthetics.Data.RepositoryInterfaces
 {
-    public interface IAuthenticationRepository : ICommonRepository<AccountSession>
+    public interface IAuthenticationRepository : ICommonRepository<AccountSessionEntity>
 	{
-		Task<Account?> login(RequestLogin request);
+		Task<AccountEntity?> login(RequestLogin request);
 		Task<int> UpdateRefeshToken(int id, string RefeshToken, DateTime RefeshTokenExpiryTime);
-		Task<Account> GetUserByUserName(string UserName);
+		Task<AccountEntity> GetUserByUserName(string UserName);
 		Task<bool> DeleteAccountSession(string? token, int? userID);
 		Task<bool> DeleteAccountSessionAll(int? userID);
 	}

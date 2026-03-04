@@ -17,6 +17,6 @@ namespace Aesthetics.Data.AestheticsInterfaces
 
 		Task<bool> delete(DeleteClinic clinic);
 
-		Task<BaseDataCollection<Clinic>> getlist(ClinicGet clinic);
+		Task<BaseDataCollection<ClinicEntity>> getlist(ClinicGet clinic);
 	}
 }

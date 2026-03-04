@@ -19,6 +19,6 @@ namespace Aesthetics.Data.AestheticsInterfaces
 
 		Task<byte[]> ExportToExcelAsync(ServiceGet service);
 
-		Task<BaseDataCollection<Service>> getlist(ServiceGet service);
+		Task<BaseDataCollection<ServiceEntity>> getlist(ServiceGet service);
 	}
 }

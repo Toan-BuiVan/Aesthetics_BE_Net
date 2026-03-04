@@ -55,7 +55,7 @@ namespace Aesthetics.Data.AestheticsServices
 					_logger.LogWarning("Invalid username or password provided.");
 					return false;
 				}
-				var account = new Account
+				var account = new AccountEntity
 				{
 					UserName = request.UserName,
 					PassWord = Security.EncryptPassWord(request.PassWord), 
@@ -67,7 +67,7 @@ namespace Aesthetics.Data.AestheticsServices
 				switch (request.AccountType)
 				{
 					case 0: 
-						var customer = new Customer
+						var customer = new CustomerEntity
 						{
 							AccountId = account.Id,
 							ReferralCode = await _accountRepository.GenerateUniqueReferralCode(),
@@ -78,9 +78,9 @@ namespace Aesthetics.Data.AestheticsServices
 						};
 						await _customerRepository.CreateEntity(customer);
 
-						var cart = new Cart
+						var cart = new CartEntity
 						{
-							CustomerId = customer.Id ?? 0,
+							CustomerId = customer.Id,
 							CreationDate = DateTime.Now,
 							DeleteStatus = false
 						};
@@ -89,7 +89,7 @@ namespace Aesthetics.Data.AestheticsServices
 						var referrerUser = await _customerRepository.GetUserIdByReferralCode(request.ReferralCode);
 						if (referrerUser != null)
 						{
-							await _customerRepository.UpdateAccumulatedPoints(referrerUser.Id.Value);
+							await _customerRepository.UpdateAccumulatedPoints(referrerUser.Id);
 						}
 
 						/*
@@ -98,14 +98,14 @@ namespace Aesthetics.Data.AestheticsServices
 						break;
 
 					case 1: 
-						var staff = new Staff
+						var staff = new StaffEntity
 						{
-							AccountId = account.Id ?? 0,
+							AccountId = account.Id ,
 							SalesPoints = 0,
-							EmploymentStatus = EmploymentStatus.Active,
-							Role = StaffRole.Staff,
+							EmploymentStatus = (int)EmploymentStatus.Active,
+							Role = (int)StaffRole.Staff,
 							DeleteStatus = false,
-							IsDoctor = request.IsDoctor,
+							IsDoctor = request.IsDoctor ?? false,
 						};
 						await _staffRepository.CreateEntity(staff);
 						/*
@@ -158,11 +158,11 @@ namespace Aesthetics.Data.AestheticsServices
 			}
 		}
 
-		public async Task<BaseDataCollection<Account>> getlist(AccountGet account)
+		public async Task<BaseDataCollection<AccountEntity>> getlist(AccountGet account)
 		{
 			try
 			{
-				Expression<Func<Account, bool>> predicate = x => x.DeleteStatus != true;
+				Expression<Func<AccountEntity, bool>> predicate = x => x.DeleteStatus != true;
 
 				if (account.Id.HasValue)
 				{
@@ -186,7 +186,7 @@ namespace Aesthetics.Data.AestheticsServices
 					.Take(account.PageSize)
 					.ToList();
 
-				return new BaseDataCollection<Account>(
+				return new BaseDataCollection<AccountEntity>(
 					pagedData,
 					totalCount,
 					account.PageNo,
@@ -196,7 +196,7 @@ namespace Aesthetics.Data.AestheticsServices
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "GetList Account exception");
-				return new BaseDataCollection<Account>(
+				return new BaseDataCollection<AccountEntity>(
 					null,
 					0,
 					account.PageNo,

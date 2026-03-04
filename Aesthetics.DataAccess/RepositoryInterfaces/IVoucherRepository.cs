@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryInterfaces
 {
-    public interface IVoucherRepository : ICommonRepository<Voucher>
+    public interface IVoucherRepository : ICommonRepository<VoucherEntity>
 	{
 		Task<string> GenCodeUnique();
 	}

@@ -19,6 +19,6 @@ namespace Aesthetics.Data.AestheticsInterfaces
 
 		Task<byte[]> ExportToExcelAsync(getproduct product);
 
-		Task<BaseDataCollection<Product>> getlist(getproduct product);
+		Task<BaseDataCollection<ProductEntity>> getlist(getproduct product);
 	}
 }

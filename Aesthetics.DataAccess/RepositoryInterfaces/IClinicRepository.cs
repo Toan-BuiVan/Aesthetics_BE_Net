@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryInterfaces
 {
-    public interface IClinicRepository : ICommonRepository<Clinic>
+    public interface IClinicRepository : ICommonRepository<ClinicEntity>
 	{
-		Task<Clinic?> GetByName(string name);
+		Task<ClinicEntity?> GetByName(string name);
 	}
 }

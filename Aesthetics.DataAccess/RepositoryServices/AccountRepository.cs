@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryServices
 {
-    public class AccountRepository : CommonRepository<Account>, IAccountRepository
+    public class AccountRepository : CommonRepository<AccountEntity>, IAccountRepository
 	{
-		public AccountRepository(ILogger<CommonRepository<Account>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
+		public AccountRepository(ILogger<CommonRepository<AccountEntity>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
 		{
 
 		}
@@ -34,7 +34,7 @@ namespace Aesthetics.Data.RepositoryServices
 			return referralCode;
 		}
 
-		public async Task<Account?> GetByName(string name)
+		public async Task<AccountEntity?> GetByName(string name)
 		{
 			try
 			{

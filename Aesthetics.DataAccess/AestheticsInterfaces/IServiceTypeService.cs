@@ -17,6 +17,6 @@ namespace Aesthetics.Data.AestheticsInterfaces
 
 		Task<bool> delete(DeleteServiceType serviceType);
 
-		Task<BaseDataCollection<ServiceType>> getlist(ServiceTypeGet serviceType);
+		Task<BaseDataCollection<ServiceTypeEntity>> getlist(ServiceTypeGet serviceType);
 	}
 }

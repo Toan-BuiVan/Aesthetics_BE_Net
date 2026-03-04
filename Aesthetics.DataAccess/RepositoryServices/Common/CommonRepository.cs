@@ -12,6 +12,7 @@ using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Data.Entity.Infrastructure;
 using System.Runtime.CompilerServices;
+using Aesthetics.Entities.BaseEntity;
 
 namespace Aesthetics.Data.RepositoryServices.Common
 {
@@ -141,7 +142,7 @@ namespace Aesthetics.Data.RepositoryServices.Common
 				return; 
 
 			var entityType = entry.Entity.GetType().Name;
-			if (entry.Entity is BaseEntity baseEntity && entry.Entity is not Invoice && entry.Entity is not InvoiceDetail)
+			if (entry.Entity is BaseEntity baseEntity && entry.Entity is not InvoiceEntity && entry.Entity is not InvoiceDetailEntity)
 			{
 				baseEntity.DeleteStatus = true;
 			}

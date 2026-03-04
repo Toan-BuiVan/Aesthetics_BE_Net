@@ -39,7 +39,7 @@ public class CartProductService : ICartProductService
 				return false;
 			}
 
-			Expression<Func<CartProduct, bool>> predicate = x => x.CartId == request.CartId.Value && x.DeleteStatus != true;
+			Expression<Func<CartProductEntity, bool>> predicate = x => x.CartId == request.CartId.Value && x.DeleteStatus != true;
 
 			if (request.ProductId.HasValue)
 			{
@@ -65,7 +65,7 @@ public class CartProductService : ICartProductService
 				return true;
 			}
 
-			var newCartProduct = new CartProduct
+			var newCartProduct = new CartProductEntity
 			{
 				CartId = request.CartId.Value,
 				ProductId = request.ProductId,
@@ -120,24 +120,24 @@ public class CartProductService : ICartProductService
 		}
 	}
 
-	public async Task<BaseDataCollection<CartProduct>> getlist(GetCartProduct request)
+	public async Task<BaseDataCollection<CartProductEntity>> getlist(GetCartProduct request)
 	{
 		try
 		{
 			if (!request.Id.HasValue)
 			{
 				_logger.LogWarning("GetList CartProduct failed: Missing CustomerId");
-				return new BaseDataCollection<CartProduct>(null, 0, 1, int.MaxValue);
+				return new BaseDataCollection<CartProductEntity>(null, 0, 1, int.MaxValue);
 			}
 
 			var cart = await _customerRepository.GetById(request.Id.Value);
 			if (cart == null)
 			{
 				_logger.LogWarning("GetList CartProduct failed: Cart not found for CustomerId {CustomerId}", request.Id);
-				return new BaseDataCollection<CartProduct>(null, 0, 1, int.MaxValue);
+				return new BaseDataCollection<CartProductEntity>(null, 0, 1, int.MaxValue);
 			}
 
-			Expression<Func<CartProduct, bool>> predicate = x => x.CartId == cart.Id && x.DeleteStatus != true;
+			Expression<Func<CartProductEntity, bool>> predicate = x => x.CartId == cart.Id && x.DeleteStatus != true;
 
 			var allMatching = await _cartProductRepository.FindByPredicate(predicate);
 			var totalCount = allMatching.Count();
@@ -145,7 +145,7 @@ public class CartProductService : ICartProductService
 				.OrderByDescending(x => x.Id)
 				.ToList(); 
 
-			return new BaseDataCollection<CartProduct>(
+			return new BaseDataCollection<CartProductEntity>(
 				pagedData,
 				totalCount,
 				1,
@@ -155,7 +155,7 @@ public class CartProductService : ICartProductService
 		catch (Exception ex)
 		{
 			_logger.LogError(ex, "GetList CartProduct exception for CustomerId {CustomerId}", request.Id);
-			return new BaseDataCollection<CartProduct>(
+			return new BaseDataCollection<CartProductEntity>(
 				null,
 				0,
 				1,

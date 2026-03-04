@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryInterfaces
 {
-    public interface IStaffRepository : ICommonRepository<Staff>
+    public interface IStaffRepository : ICommonRepository<StaffEntity>
 	{
     }
 }

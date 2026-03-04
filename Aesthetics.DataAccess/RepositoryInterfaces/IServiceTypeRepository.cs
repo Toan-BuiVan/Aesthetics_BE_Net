@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryInterfaces
 {
-    public interface IServiceTypeRepository : ICommonRepository<ServiceType>
+    public interface IServiceTypeRepository : ICommonRepository<ServiceTypeEntity>
 	{
-		Task<ServiceType?> GetByName(string name);
+		Task<ServiceTypeEntity?> GetByName(string name);
 	}
 }

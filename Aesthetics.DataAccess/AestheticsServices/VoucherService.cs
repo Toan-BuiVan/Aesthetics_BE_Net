@@ -51,7 +51,7 @@ namespace Aesthetics.Data.AestheticsServices
 				}
 				var vouchersImagePath = await _commonService.BaseProcessingFunction64(voucher.VoucherImage);
 				var code = await _voucherRepository.GenCodeUnique();
-				var newVouchers = new Voucher
+				var newVouchers = new VoucherEntity
 				{
 					Code = code,
 					Description = voucher.Description,
@@ -105,7 +105,7 @@ namespace Aesthetics.Data.AestheticsServices
 			}
 		}
 
-		public async Task<BaseDataCollection<Voucher>> getlist(VoucherGet voucher)
+		public async Task<BaseDataCollection<VoucherEntity>> getlist(VoucherGet voucher)
 		{
 			try
 			{
@@ -146,7 +146,7 @@ namespace Aesthetics.Data.AestheticsServices
 					.Skip((voucher.PageNo - 1) * voucher.PageSize)
 					.Take(voucher.PageSize)
 					.ToList();
-				return new BaseDataCollection<Voucher>(
+				return new BaseDataCollection<VoucherEntity>(
 					pagedData,
 					totalCount,
 					voucher.PageNo,
@@ -156,7 +156,7 @@ namespace Aesthetics.Data.AestheticsServices
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "GetList Voucher exception");
-				return new BaseDataCollection<Voucher>(
+				return new BaseDataCollection<VoucherEntity>(
 					null,
 					0,
 					voucher.PageNo,
@@ -201,10 +201,10 @@ namespace Aesthetics.Data.AestheticsServices
 				existing.MinimumOrderValue = voucher.MinimumOrderValue;
 				existing.MaxValue = voucher.MaxValue;
 				existing.RankMember = voucher.RankMember;
-				existing.RatingPoints = voucher.RatingPoints;
-				existing.AccumulatedPoints = voucher.AccumulatedPoints;
+				existing.RatingPoints = voucher.RatingPoints ?? 0;
+				existing.AccumulatedPoints = voucher.AccumulatedPoints ?? 0;
 				existing.VoucherImage = vouchersImagePath;
-				existing.IsActive = voucher.IsActive;
+				existing.IsActive = voucher.IsActive ?? false;
 
 				await _voucherRepository.UpdateEntity(existing);  
 

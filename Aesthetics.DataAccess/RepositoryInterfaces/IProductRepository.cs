@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryInterfaces
 {
-    public interface IProductRepository : ICommonRepository<Product>
+    public interface IProductRepository : ICommonRepository<ProductEntity>
 	{
-		Task<Product?> GetByName(string name);
+		Task<ProductEntity?> GetByName(string name);
 	}
 }

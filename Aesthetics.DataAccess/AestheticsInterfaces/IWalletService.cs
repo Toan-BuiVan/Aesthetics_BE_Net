@@ -13,6 +13,6 @@ namespace Aesthetics.Data.AestheticsInterfaces
     {
         Task<bool> create(CreateWallet wallet);
 		Task<bool> delete(DeleteWallest wallet);
-		Task<BaseDataCollection<Wallet>> getlist(WalletGet clinic);
+		Task<BaseDataCollection<WalletEntity>> getlist(WalletGet clinic);
 	}
 }   

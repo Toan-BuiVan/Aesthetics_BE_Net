@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryServices
 {
-	public class VoucherRepository : CommonRepository<Voucher>, IVoucherRepository
+	public class VoucherRepository : CommonRepository<VoucherEntity>, IVoucherRepository
 	{
-		public VoucherRepository(ILogger<CommonRepository<Voucher>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
+		public VoucherRepository(ILogger<CommonRepository<VoucherEntity>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
 		{
 
 		}

@@ -17,6 +17,6 @@ namespace Aesthetics.Data.AestheticsInterfaces
 
 		Task<bool> delete(DeleteClinic voucher);
 
-		Task<BaseDataCollection<Voucher>> getlist(VoucherGet voucher);
+		Task<BaseDataCollection<VoucherEntity>> getlist(VoucherGet voucher);
 	}
 }

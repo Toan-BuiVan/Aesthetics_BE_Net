@@ -29,7 +29,7 @@ namespace Aesthetics.Data.AestheticsServices
 		{
 			try
 			{
-				var entity = new Comment
+				var entity = new CommentEntity
 				{
 					ProductId = comment.ProductId ?? 0,
 					ServiceId = comment.ServiceId ?? 0,
@@ -85,11 +85,11 @@ namespace Aesthetics.Data.AestheticsServices
 			}
 		}
 
-		public async Task<BaseDataCollection<Comment>> getlist(CommentGet searchComment)
+		public async Task<BaseDataCollection<CommentEntity>> getlist(CommentGet searchComment)
 		{
 			try
 			{
-				Expression<Func<Comment, bool>> predicate = x => true;
+				Expression<Func<CommentEntity, bool>> predicate = x => true;
 
 				if (searchComment.ProductId.HasValue)
 				{
@@ -110,12 +110,12 @@ namespace Aesthetics.Data.AestheticsServices
 					.Take(searchComment.PageSize)
 					.ToList();
 
-				return new BaseDataCollection<Comment>(pagedData, totalCount, searchComment.PageNo, searchComment.PageSize);
+				return new BaseDataCollection<CommentEntity>(pagedData, totalCount, searchComment.PageNo, searchComment.PageSize);
 			}
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "GetList Comment exception");
-				return new BaseDataCollection<Comment>(null, 0, searchComment.PageNo, searchComment.PageSize);
+				return new BaseDataCollection<CommentEntity>(null, 0, searchComment.PageNo, searchComment.PageSize);
 			}
 		}
 

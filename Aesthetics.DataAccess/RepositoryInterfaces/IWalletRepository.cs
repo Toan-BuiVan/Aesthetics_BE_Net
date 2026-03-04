@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryInterfaces
 {
-    public interface IWalletRepository : ICommonRepository<Wallet>
+    public interface IWalletRepository : ICommonRepository<WalletEntity>
 	{
         Task<bool> GetWalletById (int voucherId, int Customer);
 	}

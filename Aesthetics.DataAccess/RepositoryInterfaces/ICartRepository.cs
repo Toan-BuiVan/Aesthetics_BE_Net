@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryInterfaces
 {
-    public interface ICartRepository : ICommonRepository<Cart>
+    public interface ICartRepository : ICommonRepository<CartEntity>
 	{
     }
 }

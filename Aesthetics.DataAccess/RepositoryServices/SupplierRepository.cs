@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryServices
 {
-	public class SupplierRepository : CommonRepository<Supplier>, ISupplierRepository
+	public class SupplierRepository : CommonRepository<SupplierEntity>, ISupplierRepository
 	{
-		public SupplierRepository(ILogger<CommonRepository<Supplier>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
+		public SupplierRepository(ILogger<CommonRepository<SupplierEntity>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
 		{
 
 		}
@@ -52,11 +52,11 @@ namespace Aesthetics.Data.RepositoryServices
 					comment.DeleteStatus = true;
 				}
 
-				var cartProducts = await _dbContext.CartProducts
+				var CartProductEntitys = await _dbContext.CartProducts
 					.Where(x => x.ProductId != null && productIds.Contains(x.ProductId.Value))
 					.ToListAsync();
 
-				foreach (var cart in cartProducts)
+				foreach (var cart in CartProductEntitys)
 				{
 					cart.DeleteStatus = true;
 				}
@@ -74,7 +74,7 @@ namespace Aesthetics.Data.RepositoryServices
 			}
 		}
 
-		public async Task<Supplier?> GetByName(string name)
+		public async Task<SupplierEntity?> GetByName(string name)
 		{
 			try
 			{

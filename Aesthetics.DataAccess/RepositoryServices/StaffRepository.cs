@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryServices
 {
-    public class StaffRepository : CommonRepository<Staff>, IStaffRepository
+    public class StaffRepository : CommonRepository<StaffEntity>, IStaffRepository
 	{
-		public StaffRepository(ILogger<CommonRepository<Staff>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
+		public StaffRepository(ILogger<CommonRepository<StaffEntity>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
 		{
 
 		}

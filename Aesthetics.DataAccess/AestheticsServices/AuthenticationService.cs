@@ -72,7 +72,7 @@ namespace Aesthetics.Data.AestheticsServices
 				var DeviceName = await _tokenService.GetDeviceName();
 				var remoteIpAddress = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress;
 				var cachKey = "User_" + user.Id + "_" + DeviceName;
-				var user_Session = new AccountSession
+				var user_Session = new AccountSessionEntity
 				{
 					Id = user.Id,
 					Token = new JwtSecurityTokenHandler().WriteToken(newToken),

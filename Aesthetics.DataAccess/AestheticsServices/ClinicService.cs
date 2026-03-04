@@ -35,7 +35,7 @@ namespace Aesthetics.Data.AestheticsServices
 					return false;
 				}
 
-				var entity = new Clinic
+				var entity = new ClinicEntity
 				{
 					ClinicName = clinic.ClinicName.Trim(),
 					ClinicStatus = true,
@@ -89,11 +89,11 @@ namespace Aesthetics.Data.AestheticsServices
 			}
 		}
 
-		public async Task<BaseDataCollection<Clinic>> getlist(ClinicGet searchClinic)
+		public async Task<BaseDataCollection<ClinicEntity>> getlist(ClinicGet searchClinic)
 		{
 			try
 			{
-				Expression<Func<Clinic, bool>> predicate = x => x.DeleteStatus != true;
+				Expression<Func<ClinicEntity, bool>> predicate = x => x.DeleteStatus != true;
 
 				if (searchClinic.Id.HasValue)
 				{
@@ -117,7 +117,7 @@ namespace Aesthetics.Data.AestheticsServices
 					.Take(searchClinic.PageSize)
 					.ToList();
 
-				return new BaseDataCollection<Clinic>(
+				return new BaseDataCollection<ClinicEntity>(
 					pagedData,
 					totalCount,
 					searchClinic.PageNo,
@@ -127,7 +127,7 @@ namespace Aesthetics.Data.AestheticsServices
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "GetList Clinic exception");
-				return new BaseDataCollection<Clinic>(
+				return new BaseDataCollection<ClinicEntity>(
 					null,
 					0,
 					searchClinic.PageNo,

@@ -17,6 +17,6 @@ namespace Aesthetics.Data.AestheticsInterfaces
 
 		Task<bool> delete(DeleteCartProduct request);
 
-		Task<BaseDataCollection<CartProduct>> getlist(GetCartProduct request);
+		Task<BaseDataCollection<CartProductEntity>> getlist(GetCartProduct request);
 	}
 }

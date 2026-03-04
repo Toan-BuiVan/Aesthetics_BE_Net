@@ -17,6 +17,6 @@ namespace Aesthetics.Data.AestheticsInterfaces
 
 		Task<bool> delete(SupplierDelete supplier);
 
-		Task<BaseDataCollection<Supplier>> getlist(SupplierGet searchSupplier);
+		Task<BaseDataCollection<SupplierEntity>> getlist(SupplierGet searchSupplier);
 	}
 }

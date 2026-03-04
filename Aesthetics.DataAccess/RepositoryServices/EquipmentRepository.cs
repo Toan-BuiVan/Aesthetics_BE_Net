@@ -11,14 +11,14 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryServices
 {
-    public class EquipmentRepository : CommonRepository<Equipment>, IEquipmentRepository
+    public class EquipmentRepository : CommonRepository<EquipmentEntity>, IEquipmentRepository
 	{
-		public EquipmentRepository(ILogger<CommonRepository<Equipment>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
+		public EquipmentRepository(ILogger<CommonRepository<EquipmentEntity>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
 		{
 
 		}
 
-		public async Task<Equipment?> GetByName(string name)
+		public async Task<EquipmentEntity?> GetByName(string name)
 		{
 			try
 			{

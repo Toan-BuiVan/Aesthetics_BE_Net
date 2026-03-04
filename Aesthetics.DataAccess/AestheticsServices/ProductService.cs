@@ -47,7 +47,7 @@ namespace Aesthetics.Data.AestheticsServices
 					processedImages = await _commonService.BaseProcessingFunction64(product.ProductImages);
 				}
 
-				var newProduct = new Product
+				var newProduct = new ProductEntity
 				{
 					ServiceTypeId = product.ServiceTypeId,
 					SupplierId = product.SupplierId,
@@ -103,7 +103,7 @@ namespace Aesthetics.Data.AestheticsServices
 			try
 			{
 				_logger.LogInformation("Start exporting Products to Excel");
-				Expression<Func<Product, bool>> predicate = x => x.DeleteStatus != true;
+				Expression<Func<ProductEntity, bool>> predicate = x => x.DeleteStatus != true;
 				if (product.Id.HasValue)
 				{
 					predicate = predicate.And(x => x.Id == product.Id.Value);
@@ -165,11 +165,11 @@ namespace Aesthetics.Data.AestheticsServices
 			}
 		}
 
-		public async Task<BaseDataCollection<Product>> getlist(getproduct product)
+		public async Task<BaseDataCollection<ProductEntity>> getlist(getproduct product)
 		{
 			try
 			{
-				Expression<Func<Product, bool>> predicate = x => x.DeleteStatus != true;
+				Expression<Func<ProductEntity, bool>> predicate = x => x.DeleteStatus != true;
 
 				if (product.Id.HasValue)
 				{
@@ -202,7 +202,7 @@ namespace Aesthetics.Data.AestheticsServices
 					.Take(product.PageSize)
 					.ToList();
 
-				return new BaseDataCollection<Product>(
+				return new BaseDataCollection<ProductEntity>(
 					pagedData,
 					totalCount,
 					product.PageNo,
@@ -212,7 +212,7 @@ namespace Aesthetics.Data.AestheticsServices
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "GetList Product exception");
-				return new BaseDataCollection<Product>(
+				return new BaseDataCollection<ProductEntity>(
 					null,
 					0,
 					product.PageNo,

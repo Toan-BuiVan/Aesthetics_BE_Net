@@ -14,7 +14,7 @@ using XSystem.Security.Cryptography;
 
 namespace Aesthetics.Data.RepositoryServices
 {
-	public class AuthenticationRepository : CommonRepository<AccountSession>, IAuthenticationRepository
+	public class AuthenticationRepository : CommonRepository<AccountSessionEntity>, IAuthenticationRepository
 	{
 		public AuthenticationRepository(ILogger<AuthenticationRepository> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
 		{
@@ -51,12 +51,12 @@ namespace Aesthetics.Data.RepositoryServices
 			return true;
 		}
 
-		public async Task<Account> GetUserByUserName(string UserName)
+		public async Task<AccountEntity> GetUserByUserName(string UserName)
 		{
 			return _dbContext.Accounts.ToList().Where(s => s.UserName == UserName).FirstOrDefault();
 		}
 
-		public async Task<Account?> login(RequestLogin request)
+		public async Task<AccountEntity?> login(RequestLogin request)
 		{
 			try
 			{

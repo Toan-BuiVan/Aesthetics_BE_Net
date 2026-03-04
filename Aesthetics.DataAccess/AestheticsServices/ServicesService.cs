@@ -53,7 +53,7 @@ namespace Aesthetics.Data.AestheticsServices
 					_logger.LogWarning("Create Service failed: Service with name '{ServiceName}' already exists.", service.ServiceName);
 					return false;
 				}
-				var newService = new Service
+				var newService = new ServiceEntity
 				{
 					ServiceTypeId = service.ServiceTypeId,
 					ServiceName = service.ServiceName,
@@ -104,7 +104,7 @@ namespace Aesthetics.Data.AestheticsServices
 			try
 			{
 				_logger.LogInformation("Start exporting Services to Excel");
-				Expression<Func<Service, bool>> predicate = x => x.DeleteStatus != true;
+				Expression<Func<ServiceEntity, bool>> predicate = x => x.DeleteStatus != true;
 				if (service.Id.HasValue)
 				{
 					predicate = predicate.And(x => x.Id == service.Id.Value);
@@ -148,11 +148,11 @@ namespace Aesthetics.Data.AestheticsServices
 			}
 		}
 
-		public async Task<BaseDataCollection<Service>> getlist(ServiceGet service)
+		public async Task<BaseDataCollection<ServiceEntity>> getlist(ServiceGet service)
 		{
 			try
 			{
-				Expression<Func<Service, bool>> predicate = x => x.DeleteStatus != true;
+				Expression<Func<ServiceEntity, bool>> predicate = x => x.DeleteStatus != true;
 				if (service.Id.HasValue)
 				{
 					predicate = predicate.And(x => x.Id == service.Id.Value);
@@ -169,7 +169,7 @@ namespace Aesthetics.Data.AestheticsServices
 					.Skip((service.PageNo - 1) * service.PageSize)
 					.Take(service.PageSize)
 					.ToList();
-				return new BaseDataCollection<Service>(
+				return new BaseDataCollection<ServiceEntity>(
 					pagedData,
 					totalCount,
 					service.PageNo,
@@ -179,7 +179,7 @@ namespace Aesthetics.Data.AestheticsServices
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "GetList Service exception");
-				return new BaseDataCollection<Service>(
+				return new BaseDataCollection<ServiceEntity>(
 					null,
 					0,
 					service.PageNo,

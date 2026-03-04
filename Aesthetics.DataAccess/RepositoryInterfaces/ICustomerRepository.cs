@@ -9,9 +9,9 @@ using XAct.Users;
 
 namespace Aesthetics.Data.RepositoryInterfaces
 {
-    public interface ICustomerRepository : ICommonRepository<Customer>
+    public interface ICustomerRepository : ICommonRepository<CustomerEntity>
 	{
-		Task<Customer> GetUserIdByReferralCode(string referralCode);
+		Task<CustomerEntity> GetUserIdByReferralCode(string referralCode);
 		Task UpdateAccumulatedPoints(int userId);
 	}
 }
