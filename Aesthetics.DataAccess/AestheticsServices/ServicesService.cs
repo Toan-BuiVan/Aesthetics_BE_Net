@@ -321,7 +321,7 @@ namespace Aesthetics.Data.AestheticsServices
 					var planIds = plans.Select(x => x.Id).ToList();
 
 					var sessions = await _treatmentSessionRepository
-						.FindByPredicate(x => planIds.Contains(x.TreatmentPlanId));
+						.FindByPredicate(x => planIds.Contains(x.TreatmentPlanId ?? 0));
 
 					foreach (var session in sessions)
 						session.DeleteStatus = false;
@@ -344,7 +344,7 @@ namespace Aesthetics.Data.AestheticsServices
 				var planIds = plans.Select(x => x.Id).ToList();
 
 				var sessions = await _treatmentSessionRepository
-					.FindByPredicate(x => planIds.Contains(x.TreatmentPlanId));
+					.FindByPredicate(x => planIds.Contains(x.TreatmentPlanId ?? 0));
 
 				foreach (var session in sessions)
 					session.DeleteStatus = true;

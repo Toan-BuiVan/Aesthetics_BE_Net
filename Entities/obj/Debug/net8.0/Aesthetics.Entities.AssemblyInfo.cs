@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Aesthetics.Entities")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a6ef745d1a2e4235b93125b4c447e351efd34eda")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7223fd4253a5ff1e57d916397c9d1f44d3cbaffa")]
 [assembly: System.Reflection.AssemblyProductAttribute("Aesthetics.Entities")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Aesthetics.Entities")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

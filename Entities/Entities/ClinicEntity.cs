@@ -19,6 +19,7 @@ namespace Aesthetics.Entities.Entities
 		public bool ClinicStatus { get; set; } = true;
 
 		// Navigation properties
+		public ICollection<AppointmentTimeLockEntity>? AppointmentTimeLocks { get; set; }
 		public virtual ICollection<ClinicStaffEntity> ClinicStaffs { get; set; } = [];
 		public virtual ICollection<EquipmentEntity> Equipments { get; set; } = [];
 		public virtual ICollection<AppointmentAssignmentEntity> AppointmentAssignments { get; set; } = [];

@@ -26,15 +26,11 @@ namespace Aesthetics.Entities.Entities
 		/// <summary>Thời gian bắt đầu</summary>
 		public DateTime? StartTime { get; set; }
 
-		/// <summary>Thời gian kết thúc</summary>
-		public DateTime? EndTime { get; set; }
-
 		/// <summary>Ngày tạo lịch hẹn</summary>
 		public DateTime? CreationDate { get; set; }
 
 		/// <summary>Trạng thái: DaDat, DangThucHien, HoanThanh, Huy, DoiLich</summary>
-		[MaxLength(50)]
-		public string? Status { get; set; }
+		public int? Status { get; set; }
 
 		/// <summary>false = Chưa thanh toán, true = Đã thanh toán</summary>
 		public bool PaymentStatus { get; set; }
