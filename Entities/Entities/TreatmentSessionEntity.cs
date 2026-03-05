@@ -12,10 +12,10 @@ namespace Aesthetics.Entities.Entities
 	public class TreatmentSessionEntity : Aesthetics.Entities.BaseEntity.BaseEntity
 	{
 		/// <summary>FK → TreatmentPlans: thuộc gói nào</summary>
-		public int TreatmentPlanId { get; set; }
+		public int? TreatmentPlanId { get; set; }
 
 		/// <summary>Buổi thứ mấy: 1, 2, 3...</summary>
-		public int SessionNumber { get; set; }
+		public int? SessionNumber { get; set; }
 
 		/// <summary>Tên buổi: 'Buổi 1: Tẩy da chết', 'Buổi 2: Laser nhẹ'</summary>
 		[MaxLength(250)]

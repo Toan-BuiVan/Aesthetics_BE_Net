@@ -2,6 +2,7 @@
 using Aesthetics.Data.AestheticsInterfaces.ICommonService;
 using Aesthetics.Data.RepositoryInterfaces;
 using Aesthetics.Entities.Entities;
+using Aesthetics.Entities.Enum;
 using Aesthetics.Entities.Models.RequestModel;
 using Aesthetics.Entities.Models.ResponseModel;
 using LinqKit;
@@ -11,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -20,18 +22,21 @@ namespace Aesthetics.Data.AestheticsServices
 	{
 		private readonly ILogger<ServicesService> _logger;
 		private readonly IServiceRepository _serviceRepository;
-		private readonly IServiceTypeRepository _serviceTypeRepository;
 		private ICommonService _commonService;
+		private readonly ITreatmentPlanRepository _treatmentPlanRepository;
+		private readonly ITreatmentSessionRepository _treatmentSessionRepository;
 
 		public ServicesService(ILogger<ServicesService> logger
 			, IServiceRepository serviceRepository
-			, IServiceTypeRepository serviceTypeRepository
-			, ICommonService commonService)
+			, ICommonService commonService
+			, ITreatmentPlanRepository treatmentPlanRepository
+			, ITreatmentSessionRepository treatmentSessionRepository)
 		{
 			_logger = logger;
 			_serviceRepository = serviceRepository;
-			_serviceTypeRepository = serviceTypeRepository;
 			_commonService = commonService;
+			_treatmentPlanRepository = treatmentPlanRepository;
+			_treatmentSessionRepository = treatmentSessionRepository;
 		}
 		public async Task<bool> create(CreateService service)
 		{
@@ -60,9 +65,26 @@ namespace Aesthetics.Data.AestheticsServices
 					Description = service.Description,
 					ServiceImage = processedImage,
 					Price = service.Price ?? 0,
-					Duration = service.Duration ?? 0
+					Duration = service.Duration ?? 0,
+					IsCourse = (int)service.IsCourse
 				};
 				await _serviceRepository.CreateEntity(newService);
+				if (newService.IsCourse == (int)EnumTypeCourse.Package)
+				{
+					var newPlan = new TreatmentPlanEntity
+					{
+						ServiceId = newService.Id,
+						DeleteStatus = false
+					};
+					await _treatmentPlanRepository.CreateEntity(newPlan);
+
+					var newSession = new TreatmentSessionEntity
+					{
+						TreatmentPlanId = newPlan.Id,
+						DeleteStatus = false
+					};
+					await _treatmentSessionRepository.CreateEntity(newSession);
+				}
 				return true;
 			}
 			catch (Exception ex)
@@ -192,12 +214,22 @@ namespace Aesthetics.Data.AestheticsServices
 		{
 			try
 			{
+				if (service == null || !service.Id.HasValue)
+				{
+					_logger.LogWarning("UpdateService request invalid.");
+					return false;
+				}
+
 				var existingService = await _serviceRepository.GetById(service.Id.Value);
+
 				if (existingService == null)
 				{
 					_logger.LogWarning("Update Service failed: Not found with Id {Id}", service.Id);
 					return false;
 				}
+
+				int oldIsCourse = (int)existingService.IsCourse;
+
 				if (!string.IsNullOrWhiteSpace(service.ServiceName)
 					&& existingService.ServiceName != service.ServiceName)
 				{
@@ -209,22 +241,22 @@ namespace Aesthetics.Data.AestheticsServices
 					}
 					existingService.ServiceName = service.ServiceName.Trim();
 				}
+
 				if (service.ServiceTypeId.HasValue)
-				{
 					existingService.ServiceTypeId = service.ServiceTypeId.Value;
-				}
+
 				if (!string.IsNullOrWhiteSpace(service.Description))
-				{
 					existingService.Description = service.Description.Trim();
-				}
+
 				if (service.Price.HasValue)
-				{
 					existingService.Price = service.Price.Value;
-				}
+
 				if (service.Duration.HasValue)
-				{
 					existingService.Duration = service.Duration.Value;
-				}
+
+				if (service.IsCourse.HasValue)
+					existingService.IsCourse = (int)service.IsCourse.Value;
+
 				if (!string.IsNullOrWhiteSpace(service.ServiceImage)
 					&& existingService.ServiceImage != service.ServiceImage)
 				{
@@ -232,11 +264,14 @@ namespace Aesthetics.Data.AestheticsServices
 					existingService.ServiceImage = processedImage;
 				}
 				var updated = await _serviceRepository.UpdateEntity(existingService);
+
 				if (!updated)
 				{
 					_logger.LogError("Update Service failed at repository level: Id {Id}", service.Id);
 					return false;
 				}
+
+				await HandleTreatmentPlanByCourse(existingService.Id, oldIsCourse, existingService.IsCourse ?? 0);
 				_logger.LogInformation("Update Service success: Id {Id}", service.Id);
 				return true;
 			}
@@ -244,6 +279,77 @@ namespace Aesthetics.Data.AestheticsServices
 			{
 				_logger.LogError(ex, "Update Service exception: Id {Id}", service.Id);
 				return false;
+			}
+		}
+
+		private async Task HandleTreatmentPlanByCourse(int serviceId, int oldIsCourse, int newIsCourse)
+		{
+			if (oldIsCourse == newIsCourse)
+				return;
+
+			var plans = await _treatmentPlanRepository
+				.FindByPredicate(x => x.ServiceId == serviceId);
+
+
+			if (newIsCourse == (int)EnumTypeCourse.Package)
+			{
+				if (!plans.Any())
+				{
+					var newPlan = new TreatmentPlanEntity
+					{
+						ServiceId = serviceId,
+						DeleteStatus = false
+					};
+
+					await _treatmentPlanRepository.CreateEntity(newPlan);
+
+					var newSession = new TreatmentSessionEntity
+					{
+						TreatmentPlanId = newPlan.Id,
+						DeleteStatus = false
+					};
+
+					await _treatmentSessionRepository.CreateEntity(newSession);
+				}
+				else
+				{
+					foreach (var plan in plans)
+						plan.DeleteStatus = false;
+
+					await _treatmentPlanRepository.UpdateRangeEntities(plans);
+
+					var planIds = plans.Select(x => x.Id).ToList();
+
+					var sessions = await _treatmentSessionRepository
+						.FindByPredicate(x => planIds.Contains(x.TreatmentPlanId));
+
+					foreach (var session in sessions)
+						session.DeleteStatus = false;
+
+					await _treatmentSessionRepository.UpdateRangeEntities(sessions);
+				}
+			}
+
+			// PACKAGE → SINGLE
+			else if (newIsCourse == (int)EnumTypeCourse.Single)
+			{
+				if (!plans.Any())
+					return;
+
+				foreach (var plan in plans)
+					plan.DeleteStatus = true;
+
+				await _treatmentPlanRepository.UpdateRangeEntities(plans);
+
+				var planIds = plans.Select(x => x.Id).ToList();
+
+				var sessions = await _treatmentSessionRepository
+					.FindByPredicate(x => planIds.Contains(x.TreatmentPlanId));
+
+				foreach (var session in sessions)
+					session.DeleteStatus = true;
+
+				await _treatmentSessionRepository.UpdateRangeEntities(sessions);
 			}
 		}
 	}

@@ -20,7 +20,7 @@ namespace Aesthetics.Entities.Entities
 
 		/// <summary>SanSang, DangSuDung, HuHong, BaoTri</summary>
 		[MaxLength(20)]
-		public string? Status { get; set; } = "SanSang";
+		public string? Status { get; set; }
 
 		// Navigation properties
 		[ForeignKey(nameof(ClinicId))]

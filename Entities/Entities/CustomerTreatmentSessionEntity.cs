@@ -34,7 +34,7 @@ namespace Aesthetics.Entities.Entities
 		/// BoLo: khách không đến (no-show)
 		/// </summary>
 		[MaxLength(50)]
-		public string Status { get; set; } = "ChuaThucHien";
+		public string Status { get; set; } 
 
 		/// <summary>FK → Staffs: bác sĩ thực hiện buổi này</summary>
 		public int? StaffId { get; set; }

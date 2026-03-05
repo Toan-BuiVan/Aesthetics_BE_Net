@@ -33,7 +33,7 @@ namespace Aesthetics.Entities.Entities
 		/// Huy: khách hủy giữa chừng
 		/// </summary>
 		[MaxLength(50)]
-		public string Status { get; set; } = "DangThucHien";
+		public string Status { get; set; }
 
 		/// <summary>FK → Invoices: hóa đơn thanh toán gói (nếu trả trước)</summary>
 		public int? InvoiceId { get; set; }

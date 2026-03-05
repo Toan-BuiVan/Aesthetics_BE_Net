@@ -304,23 +304,7 @@ namespace Aesthetics.Data.AestheticsDbContext
 				.HasForeignKey(e => e.ClinicId)
 				.OnDelete(DeleteBehavior.Cascade);
 
-			builder.Entity<ServiceProductEntity>()
-				.HasOne(sp => sp.Service)
-				.WithMany(s => s.ServiceProducts)
-				.HasForeignKey(sp => sp.ServiceId)
-				.OnDelete(DeleteBehavior.Cascade);
-
-			builder.Entity<ServiceProductEntity>()
-				.HasOne(sp => sp.Product)
-				.WithMany(p => p.ServiceProducts)
-				.HasForeignKey(sp => sp.ProductId)
-				.OnDelete(DeleteBehavior.Cascade);
-
-			builder.Entity<ServiceProductEntity>()
-				.HasOne(sp => sp.Clinic)
-				.WithMany(c => c.ServiceProducts)
-				.HasForeignKey(sp => sp.ClinicId)
-				.OnDelete(DeleteBehavior.SetNull);
+			
 
 			// TreatmentPlan, TreatmentSession, SessionProduct, CustomerTreatmentPlan, CustomerTreatmentSession
 			builder.Entity<TreatmentPlanEntity>()
@@ -414,7 +398,6 @@ namespace Aesthetics.Data.AestheticsDbContext
 		public DbSet<StaffShiftEntity> StaffShifts { get; set; }
 		public DbSet<PerformanceLogEntity> PerformanceLogs { get; set; }
 		public DbSet<EquipmentEntity> Equipments { get; set; }
-		public DbSet<ServiceProductEntity> ServiceProducts { get; set; }
 		public DbSet<TreatmentPlanEntity> TreatmentPlans { get; set; }
 		public DbSet<TreatmentSessionEntity> TreatmentSessions { get; set; }
 		public DbSet<SessionProductEntity> SessionProducts { get; set; }

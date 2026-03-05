@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Aesthetics")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b585d299281a336d8d79410d0b3d029acc65fcaf")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a6ef745d1a2e4235b93125b4c447e351efd34eda")]
 [assembly: System.Reflection.AssemblyProductAttribute("Aesthetics")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Aesthetics")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

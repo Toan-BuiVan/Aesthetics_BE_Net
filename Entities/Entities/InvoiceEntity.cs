@@ -33,7 +33,7 @@ namespace Aesthetics.Entities.Entities
 
 		/// <summary>ChuaThanhToan, DaThanhToan, HoanTien</summary>
 		[MaxLength(50)]
-		public string? Status { get; set; } = "ChuaThanhToan";
+		public string? Status { get; set; } 
 
 		/// <summary>Loại: 'NhapHang' (mua từ supplier), 'BanHang' (bán cho khách)</summary>
 		[MaxLength(50)]
@@ -41,7 +41,7 @@ namespace Aesthetics.Entities.Entities
 
 		/// <summary>DangXuLy, DaGiao, DaHuy</summary>
 		[MaxLength(50)]
-		public string? OrderStatus { get; set; } = "DangXuLy";
+		public string? OrderStatus { get; set; } 
 
 		/// <summary>TienMat, ChuyenKhoan, TheNganHang, MoMo, VNPay</summary>
 		[MaxLength(50)]

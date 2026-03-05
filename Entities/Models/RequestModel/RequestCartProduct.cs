@@ -28,7 +28,7 @@ namespace Aesthetics.Entities.Models.RequestModel
 		public int? Id { get; set; }
 	}
 
-	public class GetCartProduct
+	public class GetCartProduct : BaseSearchModel
 	{
 		public int? Id { get; set; }
 	}

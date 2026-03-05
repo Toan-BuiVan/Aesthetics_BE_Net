@@ -32,14 +32,13 @@ namespace Aesthetics.Entities.Entities
 		public int? Duration { get; set; }
 
 		/// <summary>false = Dịch vụ đơn lẻ, true = Có liệu trình</summary>
-		public bool IsCourse { get; set; }
+		public int? IsCourse { get; set; }
 
 		// Navigation properties
 		[ForeignKey(nameof(ServiceTypeId))]
 		public virtual ServiceTypeEntity? ServiceType { get; set; }
 
 		public virtual ICollection<TreatmentPlanEntity> TreatmentPlans { get; set; } = [];
-		public virtual ICollection<ServiceProductEntity> ServiceProducts { get; set; } = [];
 		public virtual ICollection<AppointmentEntity> Appointments { get; set; } = [];
 		public virtual ICollection<CommentEntity> Comments { get; set; } = [];
 		public virtual ICollection<CartProductEntity> CartProductEntitys { get; set; } = [];

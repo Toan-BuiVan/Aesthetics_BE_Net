@@ -21,7 +21,6 @@ namespace Aesthetics.Entities.Entities
 		// Navigation properties
 		public virtual ICollection<ClinicStaffEntity> ClinicStaffs { get; set; } = [];
 		public virtual ICollection<EquipmentEntity> Equipments { get; set; } = [];
-		public virtual ICollection<ServiceProductEntity> ServiceProducts { get; set; } = [];
 		public virtual ICollection<AppointmentAssignmentEntity> AppointmentAssignments { get; set; } = [];
 	}
 }

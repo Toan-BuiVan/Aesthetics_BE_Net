@@ -40,16 +40,16 @@ namespace Aesthetics.Entities.Entities
 		public string? IDCard { get; set; }
 
 		/// <summary>Điểm bán hàng (chỉ dùng cho nhân viên bán)</summary>
-		public int SalesPoints { get; set; }
+		public int? SalesPoints { get; set; }
 
 		/// <summary>URL hình ảnh nhân viên</summary>
 		public string? StaffImage { get; set; }
 
 		/// <summary>0: Active, 1: Probation, 2: Resigned, 3: Leave</summary>
-		public int EmploymentStatus { get; set; }
+		public int? EmploymentStatus { get; set; }
 
 		/// <summary>true = Là bác sĩ, false = Không phải</summary>
-		public bool IsDoctor { get; set; }
+		public bool? IsDoctor { get; set; }
 
 		// ── Các cột dưới đây chỉ có giá trị khi IsDoctor = true ──
 

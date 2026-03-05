@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Aesthetics.Entities.Enum;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -20,6 +21,7 @@ namespace Aesthetics.Entities.Models.RequestModel
 		public decimal? Price { get; set; } = 0;
 
 		public int? Duration { get; set; } = 0;
+		public EnumTypeCourse? IsCourse { get; set; }
 	}
 
 	public class UpdateService
@@ -37,6 +39,7 @@ namespace Aesthetics.Entities.Models.RequestModel
 		public decimal? Price { get; set; } = 0;
 
 		public int? Duration { get; set; } = 0;
+		public EnumTypeCourse? IsCourse { get; set; }
 	}
 
 	public class DeleteService

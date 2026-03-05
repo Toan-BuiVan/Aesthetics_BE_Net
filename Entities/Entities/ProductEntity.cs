@@ -52,7 +52,6 @@ namespace Aesthetics.Entities.Entities
 		[ForeignKey(nameof(SupplierId))]
 		public virtual SupplierEntity? Supplier { get; set; }
 
-		public virtual ICollection<ServiceProductEntity> ServiceProducts { get; set; } = [];
 		public virtual ICollection<SessionProductEntity> SessionProducts { get; set; } = [];
 		public virtual ICollection<CommentEntity> Comments { get; set; } = [];
 		public virtual ICollection<CartProductEntity> CartProductEntitys { get; set; } = [];
