@@ -186,7 +186,8 @@ namespace Aesthetics.Data.AestheticsServices
 					return false;
 				}
 
-				var deleted = await _treatmentSessionRepository.DeleteRangeEntitiesStatus(existingSession);
+				var deleted = await _treatmentSessionRepository.DeleteEntitiesStatus(existingSession);
+
 				if (!deleted)
 				{
 					_logger.LogError("Delete TreatmentSession failed at repository level: Id {Id}", session.Id);
@@ -195,23 +196,26 @@ namespace Aesthetics.Data.AestheticsServices
 
 				var remainingSessions = await _treatmentSessionRepository.FindByPredicate(x =>
 					x.TreatmentPlanId == existingSession.TreatmentPlanId && !x.DeleteStatus);
-				if (!remainingSessions.Any())
+				int remainingCount = remainingSessions.Count();
+				var plan = await _treatmentPlanRepository.GetById(existingSession.TreatmentPlanId.Value);
+				if (plan != null)
 				{
-					var plan = await _treatmentPlanRepository.GetById(existingSession.TreatmentPlanId.Value);
-					if (plan != null)
+					plan.TotalSessions = remainingCount;
+
+					var planUpdated = await _treatmentPlanRepository.UpdateEntity(plan);
+					if (!planUpdated)
 					{
-						plan.TotalSessions = 0;
-						var planUpdated = await _treatmentPlanRepository.UpdateEntity(plan);
-						if (!planUpdated)
-						{
-							_logger.LogError("Failed to set TotalSessions to 0 for TreatmentPlanId {TreatmentPlanId}", existingSession.TreatmentPlanId);
-						}
-						else
-						{
-							_logger.LogInformation("Set TotalSessions to 0 for TreatmentPlanId {TreatmentPlanId} after last session deleted", existingSession.TreatmentPlanId);
-						}
+						_logger.LogError("Failed to update TotalSessions for TreatmentPlanId {TreatmentPlanId}", existingSession.TreatmentPlanId);
+					}
+					else
+					{
+						_logger.LogInformation("Updated TotalSessions to {TotalSessions} for TreatmentPlanId {TreatmentPlanId}",
+							remainingCount, existingSession.TreatmentPlanId);
 					}
 				}
+
+				// Re-order lại SessionNumber
+				await ReOrderSessionNumbers(existingSession.TreatmentPlanId.Value);
 
 				_logger.LogInformation("Delete TreatmentSession success: Id {Id}", session.Id);
 				return true;
@@ -223,17 +227,30 @@ namespace Aesthetics.Data.AestheticsServices
 			}
 		}
 
+		private async Task ReOrderSessionNumbers(int treatmentPlanId)
+		{
+			var sessions = (await _treatmentSessionRepository.FindByPredicate(x =>
+					x.TreatmentPlanId == treatmentPlanId && !x.DeleteStatus))
+				.OrderBy(x => x.SessionNumber)
+				.ToList();
+
+			int number = 1;
+
+			foreach (var session in sessions)
+			{
+				session.SessionNumber = number++;
+			}
+
+			await _treatmentSessionRepository.UpdateRangeEntities(sessions);
+		}
+
 		public async Task<BaseDataCollection<TreatmentSessionEntity>> getlist(TreatmentSessionGet search)
 		{
 			try
 			{
 				Expression<Func<TreatmentSessionEntity, bool>> predicate = x => x.DeleteStatus != true;
 
-				if (search.Id.HasValue)
-				{
-					predicate = x => x.Id == search.Id.Value && x.DeleteStatus != true;
-				}
-				else if (search.TreatmentPlanId.HasValue)
+				if (search.TreatmentPlanId.HasValue)
 				{
 					predicate = x => x.TreatmentPlanId == search.TreatmentPlanId.Value && x.DeleteStatus != true;
 				}

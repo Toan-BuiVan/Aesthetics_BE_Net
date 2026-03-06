@@ -40,11 +40,13 @@ namespace Aesthetics.Data.AestheticsServices
 					return false;
 				}
 
+				var totalSessions = plan.TotalSessions ?? 0;
+
 				var entity = new TreatmentPlanEntity
 				{
 					ServiceId = plan.ServiceId.Value,
 					PlanName = plan.PlanName,
-					TotalSessions = plan.TotalSessions ?? 0,
+					TotalSessions = totalSessions,
 					Price = plan.Price ?? 0,
 					SessionInterval = plan.SessionInterval ?? 0,
 					Description = plan.Description,
@@ -52,18 +54,35 @@ namespace Aesthetics.Data.AestheticsServices
 				};
 
 				var created = await _treatmentPlanRepository.CreateEntity(entity);
-				var planSession = new TreatmentSessionEntity
-				{
-					TreatmentPlanId = entity.Id,
-					DeleteStatus = false
-				};
+
 				if (!created)
 				{
 					_logger.LogError("Create TreatmentPlan failed at repository level: PlanName {PlanName}", plan.PlanName);
 					return false;
 				}
 
-				_logger.LogInformation("Create TreatmentPlan success: PlanName {PlanName} for ServiceId {ServiceId}", plan.PlanName, plan.ServiceId);
+				if (totalSessions > 0)
+				{
+					var sessions = new List<TreatmentSessionEntity>();
+
+					for (int i = 1; i <= totalSessions; i++)
+					{
+						sessions.Add(new TreatmentSessionEntity
+						{
+							TreatmentPlanId = entity.Id,
+							SessionNumber = i,
+							DeleteStatus = false
+						});
+					}
+
+					await _treatmentSessionRepository.CreateRangeEntities(sessions);
+				}
+
+				_logger.LogInformation(
+					"Create TreatmentPlan success: PlanName {PlanName} for ServiceId {ServiceId}",
+					plan.PlanName,
+					plan.ServiceId);
+
 				return true;
 			}
 			catch (Exception ex)
@@ -169,6 +188,8 @@ namespace Aesthetics.Data.AestheticsServices
 					return false;
 				}
 
+				var oldTotalSessions = existingPlan.TotalSessions ?? 0;
+
 				bool hasChanges = false;
 
 				if (plan.ServiceId.HasValue && existingPlan.ServiceId != plan.ServiceId.Value)
@@ -208,21 +229,55 @@ namespace Aesthetics.Data.AestheticsServices
 				}
 
 				var updated = await _treatmentPlanRepository.UpdateEntity(existingPlan);
+
 				if (!updated)
 				{
 					_logger.LogError("Update TreatmentPlan failed at repository level: Id {Id}", plan.Id);
 					return false;
 				}
 
-				if (existingPlan.TotalSessions == 0)
+				// HANDLE SESSION CHANGES
+				if (plan.TotalSessions.HasValue && plan.TotalSessions.Value != oldTotalSessions)
 				{
-					var sessions = await _treatmentSessionRepository
-						.FindByPredicate(x => x.TreatmentPlanId == existingPlan.Id);
+					var sessions = (await _treatmentSessionRepository
+						.FindByPredicate(x => x.TreatmentPlanId == existingPlan.Id && !x.DeleteStatus))
+						.OrderBy(x => x.SessionNumber)
+						.ToList();
 
-					foreach (var session in sessions)
-						session.DeleteStatus = true;
+					int newTotal = plan.TotalSessions.Value;
 
-					await _treatmentSessionRepository.UpdateRangeEntities(sessions);
+					// CASE 1: Increase sessions
+					if (newTotal > oldTotalSessions)
+					{
+						var newSessions = new List<TreatmentSessionEntity>();
+
+						for (int i = oldTotalSessions + 1; i <= newTotal; i++)
+						{
+							newSessions.Add(new TreatmentSessionEntity
+							{
+								TreatmentPlanId = existingPlan.Id,
+								SessionNumber = i,
+								DeleteStatus = false
+							});
+						}
+
+						await _treatmentSessionRepository.CreateRangeEntities(newSessions);
+					}
+
+					// CASE 2: Decrease sessions
+					if (newTotal < oldTotalSessions)
+					{
+						var sessionsToDelete = sessions
+							.Where(x => x.SessionNumber > newTotal)
+							.ToList();
+
+						foreach (var session in sessionsToDelete)
+						{
+							session.DeleteStatus = true;
+						}
+
+						await _treatmentSessionRepository.UpdateRangeEntities(sessionsToDelete);
+					}
 				}
 
 				_logger.LogInformation("Update TreatmentPlan success: Id {Id}", plan.Id);

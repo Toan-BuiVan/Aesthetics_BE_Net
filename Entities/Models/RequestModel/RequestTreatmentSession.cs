@@ -30,7 +30,6 @@ namespace Aesthetics.Entities.Models.RequestModel
 	}
 	public class TreatmentSessionGet : BaseSearchModel
 	{
-		public int? Id { get; set; }
 		public int? TreatmentPlanId { get; set; }
 	}
 }

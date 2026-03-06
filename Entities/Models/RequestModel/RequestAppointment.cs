@@ -12,6 +12,7 @@ namespace Aesthetics.Entities.Models.RequestModel
 		public int? StaffId { get; set; }
 		public int? ServiceId { get; set; }
 		public DateTime? StartTime { get; set; }
+		public int? CustomerTreatmentPlanId { get; set; }
 	}
 
 	public class DeleteAppointment
