@@ -28,11 +28,14 @@ namespace Aesthetics.Entities.Entities
 
 		/// <summary>
 		/// ChuaThucHien: chưa đến lượt,
+		/// ChoDatLich: Chờ đặt lịch khám,
 		/// DaDatLich: đã đặt lịch hẹn,
 		/// DangThucHien: đang thực hiện,
 		/// HoanThanh: buổi này đã xong,
 		/// BoLo: khách không đến (no-show)
 		/// </summary>
+		/// 
+
 		[MaxLength(50)]
 		public string? Status { get; set; } 
 

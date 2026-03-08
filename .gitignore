@@ -1,9 +1,20 @@
 # Visual Studio
 .vs/
+
+# Build folders
 bin/
 obj/
 
 # User files
 *.user
 *.suo
+
+# Rider / JetBrains
+.idea/
+
+# Logs
+*.log
+
+# Cache
+.cache/
 *.cache
