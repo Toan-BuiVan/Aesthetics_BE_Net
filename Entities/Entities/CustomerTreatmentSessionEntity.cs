@@ -12,10 +12,10 @@ namespace Aesthetics.Entities.Entities
 	public class CustomerTreatmentSessionEntity : Aesthetics.Entities.BaseEntity.BaseEntity
 	{
 		/// <summary>FK → CustomerTreatmentPlans: thuộc gói đăng ký nào</summary>
-		public int CustomerTreatmentPlanId { get; set; }
+		public int? CustomerTreatmentPlanId { get; set; }
 
 		/// <summary>FK → TreatmentSessions: buổi template nào (buổi 1, 2...)</summary>
-		public int TreatmentSessionId { get; set; }
+		public int? TreatmentSessionId { get; set; }
 
 		/// <summary>FK → Appointments: liên kết lịch hẹn (1:1, null nếu chưa đặt)</summary>
 		public int? AppointmentId { get; set; }
@@ -34,7 +34,7 @@ namespace Aesthetics.Entities.Entities
 		/// BoLo: khách không đến (no-show)
 		/// </summary>
 		[MaxLength(50)]
-		public string Status { get; set; } 
+		public string? Status { get; set; } 
 
 		/// <summary>FK → Staffs: bác sĩ thực hiện buổi này</summary>
 		public int? StaffId { get; set; }

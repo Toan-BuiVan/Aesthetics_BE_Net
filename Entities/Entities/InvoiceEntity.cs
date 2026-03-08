@@ -20,9 +20,18 @@ namespace Aesthetics.Entities.Entities
 		/// <summary>FK → Vouchers: voucher áp dụng (nếu có)</summary>
 		public int? VoucherId { get; set; }
 
+		// <summary>FK → TreatmentPlans: gói liệu trình</summary>
+		public int? TreatmentPlanId { get; set; }
+
+		/// <summary>FK → Services: dịch vụ</summary>
+		public int? ServiceId { get; set; }
+
 		/// <summary>Phần trăm giảm giá thực tế</summary>
 		[Column(TypeName = "decimal(5,2)")]
 		public decimal DiscountValue { get; set; }
+
+		/// <summary>Số tiền đã trả</summary>
+		public decimal PaidAmount { get; set; }
 
 		/// <summary>Tổng tiền sau giảm giá</summary>
 		[Column(TypeName = "decimal(18,2)")]

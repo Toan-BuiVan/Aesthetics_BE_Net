@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Aesthetics.Entities.Entities;
+using Aesthetics.Entities.Models.RequestModel;
+using Aesthetics.Entities.Models.ResponseModel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,5 +11,10 @@ namespace Aesthetics.Data.AestheticsInterfaces
 {
     interface ICustomerTreatmentPlansService
     {
-    }
+		Task<bool> create(CreateCustomerTreatment treatment);
+
+		Task<bool> delete(DeleteCustomerTreatment treatment);
+
+		Task<BaseDataCollection<CustomerTreatmentPlanEntity>> getlist(GetCustomerTreatment treatment);
+	}
 }

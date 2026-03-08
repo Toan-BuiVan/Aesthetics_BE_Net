@@ -10,8 +10,6 @@ namespace Aesthetics.Entities.Models.RequestModel
     {
 		public int? StaffId { get; set; }
 
-		public int? ClinicId { get; set; }
-
 		public DateTime? StartTime { get; set; }
 
 		public DateTime? EndTime { get; set; }

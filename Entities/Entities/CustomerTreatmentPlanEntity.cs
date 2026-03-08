@@ -12,19 +12,19 @@ namespace Aesthetics.Entities.Entities
 	public class CustomerTreatmentPlanEntity : Aesthetics.Entities.BaseEntity.BaseEntity
 	{
 		/// <summary>FK → Customers: khách nào đăng ký</summary>
-		public int CustomerId { get; set; }
+		public int? CustomerId { get; set; }
 
 		/// <summary>FK → TreatmentPlans: gói nào</summary>
-		public int TreatmentPlanId { get; set; }
+		public int? TreatmentPlanId { get; set; }
 
 		/// <summary>Ngày bắt đầu liệu trình</summary>
-		public DateTime StartDate { get; set; }
+		public DateTime? StartDate { get; set; }
 
 		/// <summary>Ngày dự kiến kết thúc (= StartDate + TotalSessions * SessionInterval)</summary>
 		public DateTime? ExpectedEndDate { get; set; }
 
 		/// <summary>Số buổi đã hoàn thành (cập nhật sau mỗi buổi)</summary>
-		public int CompletedSessions { get; set; }
+		public int? CompletedSessions { get; set; }
 
 		/// <summary>
 		/// DangThucHien: đang chạy liệu trình,
@@ -33,7 +33,7 @@ namespace Aesthetics.Entities.Entities
 		/// Huy: khách hủy giữa chừng
 		/// </summary>
 		[MaxLength(50)]
-		public string Status { get; set; }
+		public string? Status { get; set; }
 
 		/// <summary>FK → Invoices: hóa đơn thanh toán gói (nếu trả trước)</summary>
 		public int? InvoiceId { get; set; }
