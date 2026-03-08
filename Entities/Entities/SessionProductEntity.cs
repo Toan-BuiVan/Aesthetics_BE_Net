@@ -11,13 +11,15 @@ namespace Aesthetics.Entities.Entities
 	public class SessionProductEntity : Aesthetics.Entities.BaseEntity.BaseEntity
 	{
 		/// <summary>FK → TreatmentSessions: buổi nào</summary>
-		public int TreatmentSessionId { get; set; }
+		public int? TreatmentSessionId { get; set; }
 
 		/// <summary>FK → Products: sản phẩm nào</summary>
-		public int ProductId { get; set; }
+		public int? ProductId { get; set; }
 
 		/// <summary>Số lượng sản phẩm dùng cho buổi này</summary>
-		public int QuantityUsed { get; set; } = 1;
+		public int? QuantityUsed { get; set; }
+
+		public int? ServiceId { get; set; }
 
 		// Navigation properties
 		[ForeignKey(nameof(TreatmentSessionId))]

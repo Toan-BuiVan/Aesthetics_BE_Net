@@ -15,6 +15,12 @@ namespace Aesthetics.Entities.Models.RequestModel
 		public int? VoucherId { get; set; }
 	}
 
+	public class UpdateCustomerTreatment
+	{
+		public int? Id { get; set; }
+		public string? Status { get; set; }
+	}
+
 	public class DeleteCustomerTreatment
 	{
 		public int? Id { get; set; }

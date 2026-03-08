@@ -19,15 +19,17 @@ namespace Aesthetics.Data.AestheticsServices
 		private readonly ILogger<TreatmentPlanService> _logger;
 		private readonly ITreatmentPlanRepository _treatmentPlanRepository;
 		private readonly ITreatmentSessionRepository _treatmentSessionRepository;
-
+		private readonly ISessionProductRepository _sessionProductRepository;
 
 		public TreatmentPlanService(ILogger<TreatmentPlanService> logger
 			, ITreatmentPlanRepository treatmentPlanRepository
-			, ITreatmentSessionRepository treatmentSessionRepository)
+			, ITreatmentSessionRepository treatmentSessionRepository
+			, ISessionProductRepository sessionProductRepository)
 		{
 			_logger = logger;
 			_treatmentPlanRepository = treatmentPlanRepository;
 			_treatmentSessionRepository = treatmentSessionRepository;
+			_sessionProductRepository = sessionProductRepository;
 		}
 
 		public async Task<bool> create(CreateTreatmentPlan plan)
@@ -76,6 +78,12 @@ namespace Aesthetics.Data.AestheticsServices
 					}
 
 					await _treatmentSessionRepository.CreateRangeEntities(sessions);
+
+					// Tạo SessionProducts cho mỗi session nếu có ProductIds
+					if (plan.ProductIds != null && plan.ProductIds.Any())
+					{
+						await CreateSessionProductsForSessions(sessions, plan.ProductIds, plan.ServiceId.Value);
+					}
 				}
 
 				_logger.LogInformation(
@@ -262,6 +270,9 @@ namespace Aesthetics.Data.AestheticsServices
 						}
 
 						await _treatmentSessionRepository.CreateRangeEntities(newSessions);
+
+						// Tạo SessionProducts cho sessions mới nếu có sản phẩm trong plan gốc
+						await CreateSessionProductsForNewSessions(newSessions, existingPlan.ServiceId.Value);
 					}
 
 					// CASE 2: Decrease sessions
@@ -277,6 +288,9 @@ namespace Aesthetics.Data.AestheticsServices
 						}
 
 						await _treatmentSessionRepository.UpdateRangeEntities(sessionsToDelete);
+
+						// Xóa SessionProducts của các sessions bị xóa
+						await DeleteSessionProductsForSessions(sessionsToDelete.Select(s => s.Id).ToList());
 					}
 				}
 
@@ -287,6 +301,87 @@ namespace Aesthetics.Data.AestheticsServices
 			{
 				_logger.LogError(ex, "Update TreatmentPlan exception: Id {Id}", plan.Id);
 				return false;
+			}
+		}
+
+		private async Task CreateSessionProductsForSessions(List<TreatmentSessionEntity> sessions, List<int> productIds, int serviceId)
+		{
+			try
+			{
+				var sessionProducts = new List<SessionProductEntity>();
+
+				foreach (var session in sessions)
+				{
+					foreach (var productId in productIds)
+					{
+						sessionProducts.Add(new SessionProductEntity
+						{
+							TreatmentSessionId = session.Id,
+							ProductId = productId,
+							ServiceId = serviceId,
+							DeleteStatus = false
+						});
+					}
+				}
+
+				if (sessionProducts.Any())
+				{
+					await _sessionProductRepository.CreateRangeEntities(sessionProducts);
+					_logger.LogInformation(
+						"Created {Count} SessionProducts for {SessionCount} sessions",
+						sessionProducts.Count,
+						sessions.Count);
+				}
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Failed to create SessionProducts for sessions");
+				throw; // Re-throw để rollback transaction nếu có
+			}
+		}
+
+		private async Task CreateSessionProductsForNewSessions(List<TreatmentSessionEntity> newSessions, int serviceId)
+		{
+			try
+			{
+				// Lấy ProductIds từ sessions cũ để tạo cho sessions mới
+				var existingSessionProducts = await _sessionProductRepository.FindByPredicate(x => 
+					x.TreatmentSession!.TreatmentPlanId == newSessions.First().TreatmentPlanId && !x.DeleteStatus);
+
+				var productIds = existingSessionProducts.Select(sp => sp.ProductId).Distinct().Where(p => p.HasValue).Select(p => p!.Value).ToList();
+
+				if (productIds.Any())
+				{
+					await CreateSessionProductsForSessions(newSessions, productIds, serviceId);
+				}
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Failed to create SessionProducts for new sessions");
+			}
+		}
+
+		private async Task DeleteSessionProductsForSessions(List<int> sessionIds)
+		{
+			try
+			{
+				var sessionProducts = await _sessionProductRepository.FindByPredicate(x => 
+					sessionIds.Contains(x.TreatmentSessionId ?? 0) && !x.DeleteStatus);
+
+				foreach (var sessionProduct in sessionProducts)
+				{
+					sessionProduct.DeleteStatus = true;
+				}
+
+				if (sessionProducts.Any())
+				{
+					await _sessionProductRepository.UpdateRangeEntities(sessionProducts);
+					_logger.LogInformation("Deleted {Count} SessionProducts for deleted sessions", sessionProducts.Count());
+				}
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Failed to delete SessionProducts for sessions");
 			}
 		}
 	}

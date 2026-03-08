@@ -27,6 +27,8 @@ namespace Aesthetics.Data.AestheticsServices
 		private readonly IServiceRepository _serviceRepository;
 		private readonly IInvoiceRepository _invoiceRepository;                       
 		private readonly IInvoiceDetailsRepository _invoiceDetailsRepository;
+		private readonly IProductRepository _productRepository;
+		private readonly ISessionProductRepository _sessionProductRepository;
 
 		public CustomerTreatmentPlansService(ILogger<CustomerTreatmentPlansService> logger
 			, ICustomerTreatmentPlansRepository customerTreatmentPlansRepository
@@ -35,7 +37,9 @@ namespace Aesthetics.Data.AestheticsServices
 			, ITreatmentSessionRepository treatmentSessionRepository
 			, IServiceRepository serviceRepository
 			, IInvoiceRepository invoiceRepository
-			, IInvoiceDetailsRepository invoiceDetailsRepository)
+			, IInvoiceDetailsRepository invoiceDetailsRepository
+			, IProductRepository productRepository
+			, ISessionProductRepository sessionProductRepository)
 		{
 			_logger = logger;
 			_customerTreatmentPlansRepository = customerTreatmentPlansRepository;
@@ -44,8 +48,9 @@ namespace Aesthetics.Data.AestheticsServices
 			_treatmentSessionRepository = treatmentSessionRepository;
 			_serviceRepository = serviceRepository;
 			_invoiceRepository = invoiceRepository;
-			_invoiceDetailsRepository = invoiceDetailsRepository;	
-
+			_invoiceDetailsRepository = invoiceDetailsRepository;
+			_productRepository = productRepository;
+			_sessionProductRepository = sessionProductRepository;
 		}
 
 		public async Task<bool> create(CreateCustomerTreatment request)
@@ -70,6 +75,14 @@ namespace Aesthetics.Data.AestheticsServices
 				{
 					invoiceId = await CreateInvoiceAsync(request, pricing);
 				}
+
+				/*
+					-- ChoDatLich: Chờ đặt lịch khám
+					-- DangThucHien: đang chạy liệu trình
+					-- HoanThanh: đã xong tất cả buổi
+					-- TamDung: khách xin tạm dừng
+					-- Huy: khách hủy giữa chừng
+				*/
 
 				var entity = new CustomerTreatmentPlanEntity
 				{
@@ -260,6 +273,7 @@ namespace Aesthetics.Data.AestheticsServices
 
 			return invoice.Id;
 		}
+
 		private string GetInvoiceStatus(decimal paid, decimal total)
 		{
 			if (paid == 0)
@@ -286,11 +300,148 @@ namespace Aesthetics.Data.AestheticsServices
 			{
 				CustomerTreatmentPlanId = customerPlanId,
 				TreatmentSessionId = x.Id,
-				Status = "ChuaThucHien",
+				Status = "ChoDatLich",
 				DeleteStatus = false
 			}).ToList();
 
 			await _customerTreatmentSessionsRepository.CreateRangeEntities(sessions);
+		}
+
+		public async Task<bool> update(UpdateCustomerTreatment request)
+		{
+			try
+			{
+				var existing = await _customerTreatmentPlansRepository.GetById(request.Id.Value);
+				if (existing == null)
+				{
+					_logger.LogWarning("UpdateCustomerTreatment: not found id={Id}", request.Id);
+					return false;
+				}
+
+				bool hasChanges = false;
+				string oldStatus = existing.Status;
+
+				if (!string.IsNullOrWhiteSpace(request.Status) && existing.Status != request.Status)
+				{
+					existing.Status = request.Status;
+					hasChanges = true;
+				}
+
+				if (!hasChanges)
+				{
+					_logger.LogInformation("UpdateCustomerTreatment: No changes detected for Id {Id}", request.Id);
+					return true;
+				}
+
+				var updated = await _customerTreatmentPlansRepository.UpdateEntity(existing);
+				if (!updated)
+				{
+					_logger.LogError("UpdateCustomerTreatment: Failed at repository level for Id {Id}", request.Id);
+					return false;
+				}
+
+				if (request.Status != oldStatus)
+				{
+					await UpdateCustomerTreatmentSessionStatuses(existing.Id, request.Status, oldStatus);
+				}
+
+				_logger.LogInformation("UpdateCustomerTreatment: Success for Id {Id}", request.Id);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "UpdateCustomerTreatment: Exception for Id {Id}", request.Id);
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// Cập nhật status của CustomerTreatmentSession khi status của CustomerTreatmentPlan thay đổi
+		/// </summary>
+		private async Task UpdateCustomerTreatmentSessionStatuses(int customerTreatmentPlanId, string newPlanStatus, string oldPlanStatus)
+		{
+			try
+			{
+				// Lấy tất cả customer treatment sessions của plan này
+				var customerSessions = await _customerTreatmentSessionsRepository
+					.FindByPredicate(x => x.CustomerTreatmentPlanId == customerTreatmentPlanId && !x.DeleteStatus);
+
+				if (!customerSessions.Any())
+				{
+					_logger.LogInformation("UpdateCustomerTreatmentSessionStatuses: No sessions found for CustomerTreatmentPlan {Id}", customerTreatmentPlanId);
+					return;
+				}
+
+				// Xác định status mới cho sessions dựa trên status của plan
+				string newSessionStatus = GetSessionStatusFromPlanStatus(newPlanStatus);
+				
+				if (string.IsNullOrEmpty(newSessionStatus))
+				{
+					_logger.LogWarning("UpdateCustomerTreatmentSessionStatuses: No mapping found for plan status {Status}", newPlanStatus);
+					return;
+				}
+
+				var sessionsToUpdate = new List<CustomerTreatmentSessionEntity>();
+
+				foreach (var session in customerSessions)
+				{
+					// Chỉ update những sessions chưa hoàn thành hoặc bỏ lỡ
+					// trừ khi plan bị hủy hoặc tạm dừng
+					if (ShouldUpdateSessionStatus(session.Status, newPlanStatus))
+					{
+						session.Status = newSessionStatus;
+						sessionsToUpdate.Add(session);
+					}
+				}
+
+				if (sessionsToUpdate.Any())
+				{
+					await _customerTreatmentSessionsRepository.UpdateRangeEntities(sessionsToUpdate);
+					_logger.LogInformation("UpdateCustomerTreatmentSessionStatuses: Updated {Count} sessions to status {Status} for CustomerTreatmentPlan {Id}", 
+						sessionsToUpdate.Count, newSessionStatus, customerTreatmentPlanId);
+				}
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "UpdateCustomerTreatmentSessionStatuses: Exception for CustomerTreatmentPlan {Id}", customerTreatmentPlanId);
+			}
+		}
+
+		/// <summary>
+		/// Map status của CustomerTreatmentPlan sang status tương ứng của CustomerTreatmentSession
+		/// </summary>
+		private string GetSessionStatusFromPlanStatus(string planStatus)
+		{
+			return planStatus switch
+			{
+				"ChoDatLich" => "ChuaThucHien",      // Plan chờ đặt lịch -> Sessions chưa thực hiện
+				"DangThucHien" => "ChuaThucHien",    // Plan đang thực hiện -> Sessions sẵn sàng nhưng chưa thực hiện
+				"HoanThanh" => "HoanThanh",          // Plan hoàn thành -> Tất cả sessions hoàn thành
+				"TamDung" => "ChuaThucHien",         // Plan tạm dừng -> Sessions trở về chưa thực hiện
+				"Huy" => "ChuaThucHien",             // Plan hủy -> Sessions reset về chưa thực hiện
+				_ => string.Empty
+			};
+		}
+
+		/// <summary>
+		/// Xác định có nên update status của session hay không dựa trên status hiện tại và status mới của plan
+		/// </summary>
+		private bool ShouldUpdateSessionStatus(string currentSessionStatus, string newPlanStatus)
+		{
+			// Luôn update nếu plan bị hủy hoặc tạm dừng
+			if (newPlanStatus == "Huy" || newPlanStatus == "TamDung")
+				return true;
+
+			// Không override sessions đã hoàn thành hoặc bỏ lỡ
+			if (currentSessionStatus == "HoanThanh" || currentSessionStatus == "BoLo")
+				return false;
+
+			// Khi plan hoàn thành, update tất cả sessions chưa hoàn thành
+			if (newPlanStatus == "HoanThanh")
+				return true;
+
+			// Các trường hợp khác, update sessions chưa hoàn thành cụ thể
+			return currentSessionStatus != "HoanThanh" && currentSessionStatus != "BoLo";
 		}
 	}
 }
