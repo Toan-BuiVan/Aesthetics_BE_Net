@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryServices
 {
-    class TreatmentSessionRepository : CommonRepository<TreatmentSessionEntity>, ITreatmentSessionRepository
+    public class TreatmentSessionRepository : CommonRepository<TreatmentSessionEntity>, ITreatmentSessionRepository
 	{
 		public TreatmentSessionRepository(ILogger<CommonRepository<TreatmentSessionEntity>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
 		{

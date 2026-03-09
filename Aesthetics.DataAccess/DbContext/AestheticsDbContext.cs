@@ -7,6 +7,8 @@ using System.Reflection.Emit;
 using System.Security;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Metadata;
 using System.Xml.Linq;
 
 namespace Aesthetics.Data.AestheticsDbContext
@@ -403,5 +405,6 @@ namespace Aesthetics.Data.AestheticsDbContext
 		public DbSet<SessionProductEntity> SessionProducts { get; set; }
 		public DbSet<CustomerTreatmentPlanEntity> CustomerTreatmentPlans { get; set; }
 		public DbSet<CustomerTreatmentSessionEntity> CustomerTreatmentSessions { get; set; }
+		public DbSet<InventoryAlertEntity> InventoryAlerts { get; set; }
 	}
 }

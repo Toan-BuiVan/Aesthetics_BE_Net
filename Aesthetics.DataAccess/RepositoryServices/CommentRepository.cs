@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryServices
 {
-    class CommentRepository : CommonRepository<CommentEntity>, ICommentRepository
+    public class CommentRepository : CommonRepository<CommentEntity>, ICommentRepository
 	{
 		public CommentRepository(ILogger<CommonRepository<CommentEntity>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
 		{

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryServices
 {
-    class ClinicStaffRepository : CommonRepository<ClinicStaffEntity>, IClinicStaffRepository
+    public class ClinicStaffRepository : CommonRepository<ClinicStaffEntity>, IClinicStaffRepository
 	{
 		public ClinicStaffRepository(ILogger<CommonRepository<ClinicStaffEntity>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
 		{

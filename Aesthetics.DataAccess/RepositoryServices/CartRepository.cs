@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryServices
 {
-    class CartRepository : CommonRepository<CartEntity>, ICartRepository
+    public class CartRepository : CommonRepository<CartEntity>, ICartRepository
 	{
 		public CartRepository(ILogger<CommonRepository<CartEntity>> logger, AestheticsDbContext.AestheticsDbContext dbContext) : base(logger, dbContext)
 		{
