@@ -1,6 +1,8 @@
-using Aesthetics.Data.AestheticsDbContext;
+﻿using Aesthetics.Data.AestheticsDbContext;
 using Aesthetics.Data.AestheticsInterfaces;
+using Aesthetics.Data.AestheticsInterfaces.EmailService;
 using Aesthetics.Data.AestheticsServices;
+using Aesthetics.Data.BackgroundServices;
 using Aesthetics.Data.RepositoryInterfaces;
 using Aesthetics.Data.RepositoryServices;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +21,14 @@ builder.Services.AddSwaggerGen();
 
 //Repository
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
+// Thêm vào Program.cs hoặc Startup.cs
+builder.Services.AddScoped<IInventoryAlertService, InventoryAlertService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IInventoryAlertRepository, InventoryAlertRepository>(); 
+
+// Background Service
+builder.Services.AddHostedService<InventoryAlertBackgroundService>();
+
 
 //Service
 builder.Services.AddScoped<ISupplierSevice, SupplierSevice>();

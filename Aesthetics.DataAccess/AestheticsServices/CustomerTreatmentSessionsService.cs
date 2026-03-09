@@ -20,6 +20,7 @@ namespace Aesthetics.Data.AestheticsServices
 		private readonly ITreatmentSessionRepository _treatmentSessionRepository;
 		private readonly ISessionProductRepository _sessionProductRepository;
 		private readonly IProductRepository _productRepository;
+		private readonly IInventoryAlertService _inventoryAlertService;
 
 		public CustomerTreatmentSessionsService(
 			ILogger<CustomerTreatmentSessionsService> logger,
@@ -27,7 +28,8 @@ namespace Aesthetics.Data.AestheticsServices
 			ICustomerTreatmentPlansRepository customerTreatmentPlansRepository,
 			ITreatmentSessionRepository treatmentSessionRepository,
 			ISessionProductRepository sessionProductRepository,
-			IProductRepository productRepository)
+			IProductRepository productRepository,
+			IInventoryAlertService inventoryAlertService)
 		{
 			_logger = logger;
 			_customerTreatmentSessionsRepository = customerTreatmentSessionsRepository;
@@ -35,6 +37,7 @@ namespace Aesthetics.Data.AestheticsServices
 			_treatmentSessionRepository = treatmentSessionRepository;
 			_sessionProductRepository = sessionProductRepository;
 			_productRepository = productRepository;
+			_inventoryAlertService = inventoryAlertService;
 		}
 
 		public async Task<bool> update(RequestCustomerTreatmentSessions requestCustomer)
@@ -283,11 +286,14 @@ namespace Aesthetics.Data.AestheticsServices
 				_logger.LogInformation("UpdateProductStock: ProductId {ProductId} updated from {Old} to {New} (Used: {Used}) - {Reason}",
 					productId, oldQuantity, newQuantity, quantityUsed, reason);
 
-				// Cảnh báo nếu tồn kho dưới ngưỡng tối thiểu
+				// TẠO CẢNH BÁO KHI TỒN KHO DƯỚI NGƯỠNG TỐI THIỂU
 				if (product.Quantity <= product.MinimumStock)
 				{
 					_logger.LogWarning("UpdateProductStock: Stock below minimum for ProductId {ProductId}, Current: {Current}, Minimum: {Minimum}",
 						productId, product.Quantity, product.MinimumStock);
+
+					// Tạo inventory alert
+					await _inventoryAlertService.CreateLowStockAlert(productId, product.Quantity, product.MinimumStock);
 				}
 			}
 			catch (Exception ex)
