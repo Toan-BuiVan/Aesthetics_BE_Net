@@ -79,10 +79,10 @@ namespace Aesthetics.Data.AestheticsServices
 
 					await _treatmentSessionRepository.CreateRangeEntities(sessions);
 
-					// Tạo SessionProducts cho mỗi session nếu có ProductIds
-					if (plan.ProductIds != null && plan.ProductIds.Any())
+					// Tạo SessionProducts cho mỗi session nếu có SessionProducts
+					if (plan.SessionProducts != null && plan.SessionProducts.Any())
 					{
-						await CreateSessionProductsForSessions(sessions, plan.ProductIds, plan.ServiceId.Value);
+						await CreateSessionProductsForSessions(sessions, plan.SessionProducts, plan.ServiceId.Value);
 					}
 				}
 
@@ -304,7 +304,7 @@ namespace Aesthetics.Data.AestheticsServices
 			}
 		}
 
-		private async Task CreateSessionProductsForSessions(List<TreatmentSessionEntity> sessions, List<int> productIds, int serviceId)
+		private async Task CreateSessionProductsForSessions(List<TreatmentSessionEntity> sessions, List<SessionProductDefinition> sessionProductDefinitions, int serviceId)
 		{
 			try
 			{
@@ -312,15 +312,21 @@ namespace Aesthetics.Data.AestheticsServices
 
 				foreach (var session in sessions)
 				{
-					foreach (var productId in productIds)
+					// Tìm định nghĩa sản phẩm cho session này
+					var sessionDef = sessionProductDefinitions.FirstOrDefault(sp => sp.SessionNumber == session.SessionNumber);
+
+					if (sessionDef != null && sessionDef.Products.Any())
 					{
-						sessionProducts.Add(new SessionProductEntity
+						foreach (var productItem in sessionDef.Products)
 						{
-							TreatmentSessionId = session.Id,
-							ProductId = productId,
-							ServiceId = serviceId,
-							DeleteStatus = false
-						});
+							sessionProducts.Add(new SessionProductEntity
+							{
+								TreatmentSessionId = session.Id,
+								ProductId = productItem.ProductId,
+								ServiceId = serviceId,
+								DeleteStatus = false
+							});
+						}
 					}
 				}
 
@@ -340,19 +346,40 @@ namespace Aesthetics.Data.AestheticsServices
 			}
 		}
 
+
 		private async Task CreateSessionProductsForNewSessions(List<TreatmentSessionEntity> newSessions, int serviceId)
 		{
 			try
 			{
-				// Lấy ProductIds từ sessions cũ để tạo cho sessions mới
-				var existingSessionProducts = await _sessionProductRepository.FindByPredicate(x => 
+				// Lấy SessionProducts từ sessions cũ để tạo cho sessions mới
+				var existingSessionProducts = await _sessionProductRepository.FindByPredicate(x =>
 					x.TreatmentSession!.TreatmentPlanId == newSessions.First().TreatmentPlanId && !x.DeleteStatus);
 
-				var productIds = existingSessionProducts.Select(sp => sp.ProductId).Distinct().Where(p => p.HasValue).Select(p => p!.Value).ToList();
-
-				if (productIds.Any())
+				if (!existingSessionProducts.Any())
 				{
-					await CreateSessionProductsForSessions(newSessions, productIds, serviceId);
+					_logger.LogInformation("No existing SessionProducts found to replicate for new sessions");
+					return;
+				}
+
+				// Nhóm theo SessionNumber để tái tạo cấu trúc SessionProductDefinition
+				var sessionProductDefinitions = existingSessionProducts
+					.GroupBy(sp => sp.TreatmentSession!.SessionNumber)
+					.Where(g => g.Key.HasValue)
+					.Select(g => new SessionProductDefinition
+					{
+						SessionNumber = g.Key!.Value,
+						Products = g.Where(sp => sp.ProductId.HasValue)
+							.Select(sp => new SessionProductItem
+							{
+								ProductId = sp.ProductId!.Value,
+								QuantityUsed = sp.QuantityUsed ?? 1
+							}).ToList()
+					})
+					.ToList();
+
+				if (sessionProductDefinitions.Any())
+				{
+					await CreateSessionProductsForSessions(newSessions, sessionProductDefinitions, serviceId);
 				}
 			}
 			catch (Exception ex)
@@ -360,6 +387,7 @@ namespace Aesthetics.Data.AestheticsServices
 				_logger.LogError(ex, "Failed to create SessionProducts for new sessions");
 			}
 		}
+
 
 		private async Task DeleteSessionProductsForSessions(List<int> sessionIds)
 		{

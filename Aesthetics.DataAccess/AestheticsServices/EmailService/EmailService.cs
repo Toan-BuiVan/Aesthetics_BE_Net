@@ -1,25 +1,34 @@
 ﻿using Aesthetics.Data.AestheticsInterfaces;
 using Aesthetics.Data.AestheticsInterfaces.EmailService;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
 
-namespace Aesthetics.Data.AestheticsServices
+namespace Aesthetics.Data.AestheticsServices.EmailService
 {
 	public class EmailService : IEmailService
 	{
 		private readonly ILogger<EmailService> _logger;
-		// TODO: Lấy từ appsettings.json
-		private readonly string _smtpHost = "smtp.gmail.com";
-		private readonly int _smtpPort = 587;
-		private readonly string _smtpUsername = "your-email@gmail.com";
-		private readonly string _smtpPassword = "your-app-password";
-		private readonly string _fromEmail = "noreply@aesthetics.com";
+		private readonly IConfiguration _configuration;
+		private readonly string _smtpHost;
+		private readonly int _smtpPort;
+		private readonly string _smtpUsername;
+		private readonly string _smtpPassword;
+		private readonly string _fromEmail;
+		private readonly string _fromDisplayName;
 
-		public EmailService(ILogger<EmailService> logger)
+		public EmailService(ILogger<EmailService> logger, IConfiguration configuration)
 		{
 			_logger = logger;
+			_configuration = configuration;
+			_smtpHost = _configuration["EmailSettings:SmtpHost"] ?? "smtp.gmail.com";
+			_smtpPort = int.Parse(_configuration["EmailSettings:SmtpPort"] ?? "587");
+			_smtpUsername = _configuration["EmailSettings:SmtpUsername"] ?? "";
+			_smtpPassword = _configuration["EmailSettings:SmtpPassword"] ?? "";
+			_fromEmail = _configuration["EmailSettings:FromEmail"] ?? "noreply@aesthetics.com";
+			_fromDisplayName = _configuration["EmailSettings:FromDisplayName"] ?? "Hệ thống Aesthetics";
 		}
 
 		/// <summary>
@@ -61,6 +70,44 @@ namespace Aesthetics.Data.AestheticsServices
 		}
 
 		/// <summary>
+		/// Gửi email xác nhận lịch hẹn khi đặt thành công
+		/// </summary>
+		public async Task<bool> SendAppointmentConfirmation(string customerEmail, string customerName, string serviceName, DateTime appointmentTime, string staffName)
+		{
+			try
+			{
+				var subject = "✅ Xác nhận đặt lịch thành công - Spa Aesthetics";
+				var body = CreateAppointmentConfirmationEmailBody(customerName, serviceName, appointmentTime, staffName);
+
+				return await SendEmail(customerEmail, subject, body);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "SendAppointmentConfirmation: Exception for customer {CustomerEmail}", customerEmail);
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// Gửi email nhắc nhở lịch hẹn sắp đến
+		/// </summary>
+		public async Task<bool> SendAppointmentReminder(string customerEmail, string customerName, string serviceName, DateTime appointmentTime, string staffName)
+		{
+			try
+			{
+				var subject = "🔔 Nhắc nhở lịch hẹn - Spa Aesthetics";
+				var body = CreateAppointmentReminderEmailBody(customerName, serviceName, appointmentTime, staffName);
+
+				return await SendEmail(customerEmail, subject, body);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "SendAppointmentReminder: Exception for customer {CustomerEmail}", customerEmail);
+				return false;
+			}
+		}
+
+		/// <summary>
 		/// Gửi email thông qua SMTP
 		/// </summary>
 		private async Task<bool> SendEmail(string toEmail, string subject, string body)
@@ -75,7 +122,7 @@ namespace Aesthetics.Data.AestheticsServices
 
 				var mailMessage = new MailMessage
 				{
-					From = new MailAddress(_fromEmail, "Hệ thống Aesthetics"),
+					From = new MailAddress(_fromEmail, _fromDisplayName),
 					Subject = subject,
 					Body = body,
 					IsBodyHtml = true,
@@ -93,6 +140,136 @@ namespace Aesthetics.Data.AestheticsServices
 				_logger.LogError(ex, "SendEmail: Failed to send to {ToEmail}", toEmail);
 				return false;
 			}
+		}
+
+		/// <summary>
+		/// Tạo nội dung email xác nhận lịch hẹn
+		/// </summary>
+		private string CreateAppointmentConfirmationEmailBody(string customerName, string serviceName, DateTime appointmentTime, string staffName)
+		{
+			return $@"
+                <html>
+                <body style='font-family: Arial, sans-serif;'>
+                    <div style='max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;'>
+                        <div style='background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
+                            <div style='text-align: center; margin-bottom: 30px;'>
+                                <h1 style='color: #28a745; margin: 0;'>✅ Đặt lịch thành công!</h1>
+                                <p style='color: #6c757d; margin: 10px 0 0 0;'>Cảm ơn quý khách đã tin tưởng dịch vụ của chúng tôi</p>
+                            </div>
+                            
+                            <div style='background-color: #e7f3ff; padding: 20px; border-radius: 5px; margin: 20px 0;'>
+                                <h3 style='color: #0066cc; margin-top: 0;'>Thông tin lịch hẹn:</h3>
+                                <table style='width: 100%; border-collapse: collapse;'>
+                                    <tr>
+                                        <td style='padding: 8px 0; font-weight: bold; color: #333;'>Khách hàng:</td>
+                                        <td style='padding: 8px 0; color: #555;'>{customerName}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style='padding: 8px 0; font-weight: bold; color: #333;'>Dịch vụ:</td>
+                                        <td style='padding: 8px 0; color: #555;'>{serviceName}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style='padding: 8px 0; font-weight: bold; color: #333;'>Thời gian:</td>
+                                        <td style='padding: 8px 0; color: #555; font-weight: bold;'>{appointmentTime:dd/MM/yyyy HH:mm}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style='padding: 8px 0; font-weight: bold; color: #333;'>Nhân viên:</td>
+                                        <td style='padding: 8px 0; color: #555;'>{staffName}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            
+                            <div style='background-color: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107; margin: 20px 0;'>
+                                <h4 style='color: #856404; margin-top: 0;'>Lưu ý quan trọng:</h4>
+                                <ul style='color: #856404; margin: 10px 0; padding-left: 20px;'>
+                                    <li>Vui lòng có mặt trước 15 phút so với giờ hẹn</li>
+                                    <li>Mang theo CMND/CCCD để xác nhận thông tin</li>
+                                    <li>Nếu cần thay đổi lịch, vui lòng liên hệ trước 24h</li>
+                                </ul>
+                            </div>
+                            
+                            <div style='text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6;'>
+                                <p style='color: #6c757d; margin: 0;'>Liên hệ: <strong>0123.456.789</strong> | Email: <strong>support@aesthetics.com</strong></p>
+                                <p style='color: #6c757d; margin: 5px 0 0 0; font-size: 12px;'>
+                                    Chúng tôi sẽ gửi email nhắc nhở trước 24 giờ
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </body>
+                </html>";
+		}
+
+		/// <summary>
+		/// Tạo nội dung email nhắc nhở lịch hẹn
+		/// </summary>
+		private string CreateAppointmentReminderEmailBody(string customerName, string serviceName, DateTime appointmentTime, string staffName)
+		{
+			var timeRemaining = appointmentTime - DateTime.Now;
+			var hoursRemaining = (int)timeRemaining.TotalHours;
+
+			return $@"
+                <html>
+                <body style='font-family: Arial, sans-serif;'>
+                    <div style='max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;'>
+                        <div style='background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
+                            <div style='text-align: center; margin-bottom: 30px;'>
+                                <h1 style='color: #ff6b35; margin: 0;'>🔔 Nhắc nhở lịch hẹn</h1>
+                                <p style='color: #6c757d; margin: 10px 0 0 0;'>Lịch hẹn của quý khách sắp đến</p>
+                            </div>
+                            
+                            <div style='background-color: #fff3e0; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #ff6b35;'>
+                                <h3 style='color: #e65100; margin-top: 0;'>Thông tin lịch hẹn sắp tới:</h3>
+                                <table style='width: 100%; border-collapse: collapse;'>
+                                    <tr>
+                                        <td style='padding: 8px 0; font-weight: bold; color: #333;'>Khách hàng:</td>
+                                        <td style='padding: 8px 0; color: #555;'>{customerName}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style='padding: 8px 0; font-weight: bold; color: #333;'>Dịch vụ:</td>
+                                        <td style='padding: 8px 0; color: #555;'>{serviceName}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style='padding: 8px 0; font-weight: bold; color: #333;'>Thời gian:</td>
+                                        <td style='padding: 8px 0; color: #e65100; font-weight: bold; font-size: 18px;'>{appointmentTime:dd/MM/yyyy HH:mm}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style='padding: 8px 0; font-weight: bold; color: #333;'>Nhân viên:</td>
+                                        <td style='padding: 8px 0; color: #555;'>{staffName}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style='padding: 8px 0; font-weight: bold; color: #333;'>Còn lại:</td>
+                                        <td style='padding: 8px 0; color: #e65100; font-weight: bold;'>Khoảng {hoursRemaining} giờ nữa</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            
+                            <div style='background-color: #e8f5e8; padding: 15px; border-radius: 5px; border-left: 4px solid #28a745; margin: 20px 0;'>
+                                <h4 style='color: #155724; margin-top: 0;'>Chuẩn bị cho buổi hẹn:</h4>
+                                <ul style='color: #155724; margin: 10px 0; padding-left: 20px;'>
+                                    <li>Đến trước 15 phút để làm thủ tục</li>
+                                    <li>Mang theo CMND/CCCD và các giấy tờ cần thiết</li>
+                                    <li>Tháo trang sức và makeup (nếu có)</li>
+                                    <li>Thông báo tình trạng sức khỏe đặc biệt</li>
+                                </ul>
+                            </div>
+                            
+                            <div style='text-align: center; background-color: #f8d7da; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                                <p style='color: #721c24; margin: 0; font-weight: bold;'>
+                                    Cần thay đổi lịch? Hãy liên hệ ngay: <a href='tel:0123456789' style='color: #721c24;'>0123.456.789</a>
+                                </p>
+                            </div>
+                            
+                            <div style='text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6;'>
+                                <p style='color: #6c757d; margin: 0;'>Spa Aesthetics | 0123.456.789 | support@aesthetics.com</p>
+                                <p style='color: #6c757d; margin: 5px 0 0 0; font-size: 12px;'>
+                                    Cảm ơn quý khách đã tin tưởng dịch vụ của chúng tôi
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </body>
+                </html>";
 		}
 
 		/// <summary>
@@ -184,3 +361,4 @@ namespace Aesthetics.Data.AestheticsServices
 		}
 	}
 }
+

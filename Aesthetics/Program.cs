@@ -2,6 +2,7 @@
 using Aesthetics.Data.AestheticsInterfaces;
 using Aesthetics.Data.AestheticsInterfaces.EmailService;
 using Aesthetics.Data.AestheticsServices;
+using Aesthetics.Data.AestheticsServices.EmailService;
 using Aesthetics.Data.BackgroundServices;
 using Aesthetics.Data.RepositoryInterfaces;
 using Aesthetics.Data.RepositoryServices;
@@ -24,7 +25,17 @@ builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 // Thêm vào Program.cs hoặc Startup.cs
 builder.Services.AddScoped<IInventoryAlertService, InventoryAlertService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IInventoryAlertRepository, InventoryAlertRepository>(); 
+builder.Services.AddScoped<IInventoryAlertRepository, InventoryAlertRepository>();
+
+// Email services
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddHostedService<Aesthetics.Data.AestheticsServices.EmailService.AppointmentReminderBackgroundService>();
+
+// Repositories
+builder.Services.AddScoped<IAppointmentRepositoty, AppointmentRepositoty>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IStaffRepository, StaffRepository>();
+
 
 // Background Service
 builder.Services.AddHostedService<InventoryAlertBackgroundService>();

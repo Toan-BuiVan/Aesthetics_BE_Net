@@ -35,6 +35,21 @@ namespace Aesthetics.Entities.Entities
 		/// <summary>false = Chưa thanh toán, true = Đã thanh toán</summary>
 		public bool PaymentStatus { get; set; }
 
+		/// <summary>Đã gửi email xác nhận đặt lịch hay chưa</summary>
+		public bool IsConfirmationEmailSent { get; set; } = false;
+
+		/// <summary>Thời gian gửi email xác nhận</summary>
+		public DateTime? ConfirmationEmailSentDate { get; set; }
+
+		/// <summary>Đã gửi email nhắc nhở hay chưa</summary>
+		public bool IsReminderEmailSent { get; set; } = false;
+
+		/// <summary>Thời gian gửi email nhắc nhở</summary>
+		public DateTime? ReminderEmailSentDate { get; set; }
+
+		/// <summary>Thời gian trước khi gửi nhắc nhở (giờ) - mặc định 24h</summary>
+		public int ReminderHoursBefore { get; set; } = 24;
+
 		// Navigation properties
 		[ForeignKey(nameof(CustomerId))]
 		public virtual CustomerEntity? Customer { get; set; }

@@ -8,8 +8,7 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.RepositoryInterfaces
 {
-    public interface IAppointmentRepositoty : ICommonRepository<AppointmentEntity>
-	{
-
+    public interface IPerformanceLogRepository : ICommonRepository<PerformanceLogEntity>
+	{ 
     }
 }

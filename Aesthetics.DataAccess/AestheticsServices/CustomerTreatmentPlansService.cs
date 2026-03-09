@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Data.AestheticsServices
 {
-    public class CustomerTreatmentPlansService : ICustomerTreatmentPlansService
+	public class CustomerTreatmentPlansService : ICustomerTreatmentPlansService
 	{
 		private readonly ILogger<CustomerTreatmentPlansService> _logger;
 		private readonly ITreatmentPlanRepository _treatmentPlanRepository;
@@ -25,10 +25,11 @@ namespace Aesthetics.Data.AestheticsServices
 		private readonly ICustomerTreatmentPlansRepository _customerTreatmentPlansRepository;
 		private readonly ICustomerTreatmentSessionsRepository _customerTreatmentSessionsRepository;
 		private readonly IServiceRepository _serviceRepository;
-		private readonly IInvoiceRepository _invoiceRepository;                       
+		private readonly IInvoiceRepository _invoiceRepository;
 		private readonly IInvoiceDetailsRepository _invoiceDetailsRepository;
 		private readonly IProductRepository _productRepository;
 		private readonly ISessionProductRepository _sessionProductRepository;
+		private readonly IPerformanceLogRepository _performanceLogRepository;
 
 		public CustomerTreatmentPlansService(ILogger<CustomerTreatmentPlansService> logger
 			, ICustomerTreatmentPlansRepository customerTreatmentPlansRepository
@@ -39,7 +40,8 @@ namespace Aesthetics.Data.AestheticsServices
 			, IInvoiceRepository invoiceRepository
 			, IInvoiceDetailsRepository invoiceDetailsRepository
 			, IProductRepository productRepository
-			, ISessionProductRepository sessionProductRepository)
+			, ISessionProductRepository sessionProductRepository
+			, IPerformanceLogRepository performanceLogRepository)
 		{
 			_logger = logger;
 			_customerTreatmentPlansRepository = customerTreatmentPlansRepository;
@@ -51,6 +53,7 @@ namespace Aesthetics.Data.AestheticsServices
 			_invoiceDetailsRepository = invoiceDetailsRepository;
 			_productRepository = productRepository;
 			_sessionProductRepository = sessionProductRepository;
+			_performanceLogRepository = performanceLogRepository;
 		}
 
 		public async Task<bool> create(CreateCustomerTreatment request)
@@ -271,7 +274,49 @@ namespace Aesthetics.Data.AestheticsServices
 
 			await _invoiceDetailsRepository.CreateEntity(detail);
 
+			// Tạo PerformanceLog khi thanh toán PayInAdvance hoặc PartialPayment và có StaffId
+			if ((request.TypeInvoice == EnumTreatmentPlans.PayInAdvance ||
+				 request.TypeInvoice == EnumTreatmentPlans.PartialPayment) &&
+				request.StaffId.HasValue && request.StaffId.Value > 0)
+			{
+				await CreatePerformanceLogAsync(invoice.Id, request.StaffId.Value, totalMoney);
+			}
+
 			return invoice.Id;
+		}
+
+		/// <summary>
+		/// Tạo PerformanceLog với hoa hồng 5% và thưởng 200,000
+		/// </summary>
+		private async Task CreatePerformanceLogAsync(int invoiceId, int staffId, decimal totalMoney)
+		{
+			try
+			{
+				decimal commissionRate = 0.05m; // 5%
+				decimal bonusAmount = 200000m;
+
+				decimal commissionAmount = totalMoney * commissionRate;
+
+				var performanceLog = new PerformanceLogEntity
+				{
+					InvoiceId = invoiceId,
+					StaffId = staffId,
+					Commission = commissionAmount,
+					Bonus = bonusAmount,
+					LogDate = DateTime.UtcNow,
+					Description = $"Hoa hồng 5% từ hóa đơn #{invoiceId} + thưởng cố định: 200.000/hóa đơn",
+					DeleteStatus = false
+				};
+
+				await _performanceLogRepository.CreateEntity(performanceLog);
+
+				_logger.LogInformation("CreatePerformanceLog: Created for StaffId {StaffId}, InvoiceId {InvoiceId}, Commission: {Commission}, Bonus: {Bonus}",
+					staffId, invoiceId, commissionAmount, bonusAmount);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "CreatePerformanceLog: Exception for StaffId {StaffId}, InvoiceId {InvoiceId}", staffId, invoiceId);
+			}
 		}
 
 		private string GetInvoiceStatus(decimal paid, decimal total)
@@ -374,7 +419,7 @@ namespace Aesthetics.Data.AestheticsServices
 
 				// Xác định status mới cho sessions dựa trên status của plan
 				string newSessionStatus = GetSessionStatusFromPlanStatus(newPlanStatus);
-				
+
 				if (string.IsNullOrEmpty(newSessionStatus))
 				{
 					_logger.LogWarning("UpdateCustomerTreatmentSessionStatuses: No mapping found for plan status {Status}", newPlanStatus);
@@ -397,7 +442,7 @@ namespace Aesthetics.Data.AestheticsServices
 				if (sessionsToUpdate.Any())
 				{
 					await _customerTreatmentSessionsRepository.UpdateRangeEntities(sessionsToUpdate);
-					_logger.LogInformation("UpdateCustomerTreatmentSessionStatuses: Updated {Count} sessions to status {Status} for CustomerTreatmentPlan {Id}", 
+					_logger.LogInformation("UpdateCustomerTreatmentSessionStatuses: Updated {Count} sessions to status {Status} for CustomerTreatmentPlan {Id}",
 						sessionsToUpdate.Count, newSessionStatus, customerTreatmentPlanId);
 				}
 			}

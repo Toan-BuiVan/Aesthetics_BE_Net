@@ -37,7 +37,7 @@ namespace Aesthetics.Data.AestheticsServices
 				if (hasRecentAlert)
 				{
 					_logger.LogInformation("CreateLowStockAlert: Recent alert already exists for ProductId {ProductId}", productId);
-					return true; // Không tạo alert trùng lặp
+					return true; 
 				}
 
 				var alert = new InventoryAlertEntity

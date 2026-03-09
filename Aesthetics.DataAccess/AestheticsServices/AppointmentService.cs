@@ -1,5 +1,7 @@
 ﻿using Aesthetics.Data.AestheticsInterfaces;
+using Aesthetics.Data.AestheticsInterfaces.EmailService;
 using Aesthetics.Data.RepositoryInterfaces;
+using Aesthetics.Data.RepositoryServices;
 using Aesthetics.Entities.Entities;
 using Aesthetics.Entities.Enum;
 using Aesthetics.Entities.Models.RequestModel;
@@ -23,6 +25,9 @@ namespace Aesthetics.Data.AestheticsServices
 		private readonly IServiceTypeRepository _serviceTypeRepository;
 		private readonly IAppointmentTimeLockRepository _appointmentTimeLockRepository;
 		private readonly ITreatmentPlanRepository _treatmentPlanRepository;
+		private readonly IEmailService _emailService;
+		private readonly ICustomerRepository _customerRepository;
+		private readonly IStaffRepository _staffRepository;
 
 		public AppointmentService(ILogger<AppointmentService> logger
 			, IAppointmentRepositoty appointmentRepositoty
@@ -31,7 +36,10 @@ namespace Aesthetics.Data.AestheticsServices
 			, IClinicStaffRepository clinicStaffRepository
 			, IServiceTypeRepository serviceTypeRepository
 			, IAppointmentTimeLockRepository appointmentTimeLockRepository
-			, ITreatmentPlanRepository treatmentPlanRepository)
+			, ITreatmentPlanRepository treatmentPlanRepository
+			, IEmailService emailService
+			, ICustomerRepository customerRepository
+			, IStaffRepository staffRepository)
 		{
 			_logger = logger;
 			_appointmentRepositoty = appointmentRepositoty;
@@ -41,6 +49,9 @@ namespace Aesthetics.Data.AestheticsServices
 			_serviceTypeRepository = serviceTypeRepository;
 			_appointmentTimeLockRepository = appointmentTimeLockRepository;
 			_treatmentPlanRepository = treatmentPlanRepository;
+			_emailService = emailService;
+			_customerRepository = customerRepository;
+			_staffRepository = staffRepository;
 		}
 
 		public async Task<bool> create(CreateAppointment appointment)
@@ -102,7 +113,10 @@ namespace Aesthetics.Data.AestheticsServices
 					Status = (int)AppointmentStatus.Booked,
 					PaymentStatus = false,
 					DeleteStatus = false,
-					CreationDate = DateTime.Now
+					CreationDate = DateTime.Now,
+					IsConfirmationEmailSent = false,
+					IsReminderEmailSent = false,
+					ReminderHoursBefore = 24
 				};
 
 				var created = await _appointmentRepositoty.CreateEntity(entity);
@@ -113,37 +127,60 @@ namespace Aesthetics.Data.AestheticsServices
 					return false;
 				}
 
-				// 6. Tạo assignment cho staff
+				// 6. Tạo AppointmentAssignment cho tất cả appointments
 				var assignment = new AppointmentAssignmentEntity
 				{
 					AppointmentId = entity.Id,
 					StaffId = appointment.StaffId.Value,
 					ClinicId = clinicId ?? 0,
+					ServiceId = appointment.ServiceId.Value,
+					ServiceTypeId = service.ServiceTypeId,
+					AssignedDate = appointment.StartTime,
+					Status = false, // Chưa thực hiện
+					QuantityServices = 1,
+					Price = service.Price,
+					PaymentStatus = false,
+					NumberOrder = 1,
 					DeleteStatus = false
 				};
 
-				await _appointmentAssignmentRepository.CreateEntity(assignment);
+				var assignmentCreated = await _appointmentAssignmentRepository.CreateEntity(assignment);
+				if (!assignmentCreated)
+				{
+					_logger.LogWarning("Create AppointmentAssignment failed for AppointmentId {AppointmentId}", entity.Id);
+				}
 
-				// 7. Nếu là package thì tạo thêm session
+				// 7. Nếu là package thì tạo thêm session cho treatment plan
 				if (service.IsCourse == (int)EnumTypeCourse.Package)
 				{
 					var serviceType = (await _serviceTypeRepository
 						.FindByPredicate(x => x.Id == service.ServiceTypeId))
 						.FirstOrDefault();
 
-					var session = new AppointmentAssignmentEntity
+					// Tạo session bổ sung cho package (có thể có nhiều session)
+					var packageSession = new AppointmentAssignmentEntity
 					{
 						AppointmentId = entity.Id,
 						StaffId = appointment.StaffId.Value,
 						ClinicId = clinicId ?? 0,
-						ServiceId = serviceType?.Id ?? 0,
+						ServiceId = appointment.ServiceId.Value,
+						ServiceTypeId = service.ServiceTypeId,
+						AssignedDate = appointment.StartTime,
+						Status = false,
+						QuantityServices = 1,
+						Price = service.Price,
+						PaymentStatus = false,
+						NumberOrder = 2, // Thứ tự thứ 2 cho package
 						DeleteStatus = false
 					};
 
-					await _appointmentAssignmentRepository.CreateEntity(session);
+					await _appointmentAssignmentRepository.CreateEntity(packageSession);
 				}
 
-				_logger.LogInformation("Create Appointment success for CustomerId {CustomerId}", appointment.CustomerId);
+				// 8. Gửi email xác nhận đặt lịch
+				await SendConfirmationEmail(entity);
+
+				_logger.LogInformation("Create Appointment success for CustomerId {CustomerId} with AppointmentAssignment", appointment.CustomerId);
 
 				return true;
 			}
@@ -151,6 +188,56 @@ namespace Aesthetics.Data.AestheticsServices
 			{
 				_logger.LogError(ex, "Create Appointment exception");
 				return false;
+			}
+		}
+
+
+		/// <summary>
+		/// Gửi email xác nhận đặt lịch thành công
+		/// </summary>
+		private async Task SendConfirmationEmail(AppointmentEntity appointment)
+		{
+			try
+			{
+				// Lấy thông tin customer
+				var customer = await _customerRepository.GetById(appointment.CustomerId.Value);
+				if (customer == null || string.IsNullOrEmpty(customer.Email))
+				{
+					_logger.LogWarning("SendConfirmationEmail: Customer not found or no email. CustomerId {CustomerId}", appointment.CustomerId);
+					return;
+				}
+
+				// Lấy thông tin staff
+				var staff = await _staffRepository.GetById(appointment.StaffId.Value);
+				var staffName = staff?.FullName ?? "Nhân viên";
+
+				// Lấy thông tin service
+				var service = await _serviceRepository.GetById(appointment.ServiceId.Value);
+				var serviceName = service?.ServiceName ?? "Dịch vụ";
+
+				// Gửi email
+				var emailSent = await _emailService.SendAppointmentConfirmation(
+					customer.Email,
+					customer.FullName ?? "Khách hàng",
+					serviceName,
+					appointment.StartTime.Value,
+					staffName
+				);
+
+				if (emailSent)
+				{
+					// Cập nhật trạng thái đã gửi email
+					appointment.IsConfirmationEmailSent = true;
+					appointment.ConfirmationEmailSentDate = DateTime.UtcNow;
+					await _appointmentRepositoty.UpdateEntity(appointment);
+
+					_logger.LogInformation("SendConfirmationEmail: Successfully sent to {Email} for AppointmentId {AppointmentId}",
+						customer.Email, appointment.Id);
+				}
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "SendConfirmationEmail: Exception for AppointmentId {AppointmentId}", appointment.Id);
 			}
 		}
 
