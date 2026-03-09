@@ -9,6 +9,6 @@ namespace Aesthetics.Data.AestheticsInterfaces
 {
     public interface ICustomerTreatmentSessionsService
     {
-		Task<bool> update(UpdateClinic clinic);
+		Task<bool> update(RequestCustomerTreatmentSessions requestCustomer);
 	}
 }

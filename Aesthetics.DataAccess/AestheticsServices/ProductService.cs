@@ -22,19 +22,25 @@ namespace Aesthetics.Data.AestheticsServices
 		private readonly IProductRepository _productRepository;
 		private readonly ISupplierRepository _supplierRepository;
 		private readonly IServiceTypeRepository _serviceTypeRepository;
+		private readonly IInvoiceRepository _invoiceRepository;
+		private readonly IInvoiceDetailsRepository _invoiceDetailsRepository;
 		private ICommonService _commonService;
 
 		public ProductService(ILogger<ProductService> logger
 			, IProductRepository productRepository
 			, ISupplierRepository supplierRepository
 			, IServiceTypeRepository serviceTypeRepository
-			, ICommonService commonService)
+			, ICommonService commonService
+			, IInvoiceRepository invoiceRepository
+			, IInvoiceDetailsRepository invoiceDetailsRepository)
 		{
 			_logger = logger;
 			_productRepository = productRepository;
 			_supplierRepository = supplierRepository;
 			_serviceTypeRepository = serviceTypeRepository;
 			_commonService = commonService;
+			_invoiceRepository = invoiceRepository;
+			_invoiceDetailsRepository = invoiceDetailsRepository;
 		}
 
 		public async Task<bool> create(CreateProduct product)
@@ -56,18 +62,77 @@ namespace Aesthetics.Data.AestheticsServices
 					SellingPrice = product.SellingPrice,
 					Quantity = product.Quantity,
 					Unit = product.Unit,
+					Status = "ChoPheDuyet",
 					MinimumStock = product.MinimumStock,
 					ProductImages = processedImages,
 					CostPrice = product.CostPrice
 				};
 
 				await _productRepository.CreateEntity(newProduct);
+
+				// Tạo Invoice và InvoiceDetail với Type "NhapHang"
+				await CreatePurchaseInvoiceForProduct(newProduct, product);
+
 				return true;
 			}
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "Error creating product: {ProductName}", product.ProductName);
 				return false;
+			}
+		}
+
+		/// <summary>
+		/// Tạo hóa đơn nhập hàng cho sản phẩm mới được tạo
+		/// </summary>
+		private async Task CreatePurchaseInvoiceForProduct(ProductEntity newProduct, CreateProduct product)
+		{
+			try
+			{
+				decimal totalMoney = (product.CostPrice * product.Quantity);
+
+				// Tạo Invoice với Type = "NhapHang"
+				var invoice = new InvoiceEntity
+				{
+					CustomerId = null, // Không có khách hàng cho hóa đơn nhập
+					StaffId = 1, // Default staff hoặc có thể thêm vào CreateProduct request
+					TotalMoney = totalMoney,
+					PaidAmount = totalMoney, // Giả sử thanh toán ngay khi nhập
+					OutstandingBalance = 0,
+					DateCreated = DateTime.UtcNow,
+					Status = "DaThanhToan", // Đã thanh toán khi nhập hàng
+					Type = "NhapHang",
+					OrderStatus = "DaGiao", // Hàng đã nhận
+					DeleteStatus = false
+				};
+
+				await _invoiceRepository.CreateEntity(invoice);
+				_logger.LogInformation("Created purchase invoice for product: ProductId {ProductId}, InvoiceId {InvoiceId}", 
+					newProduct.Id, invoice.Id);
+
+				// Tạo InvoiceDetail
+				var detail = new InvoiceDetailEntity
+				{
+					InvoiceId = invoice.Id,
+					ProductId = newProduct.Id,
+					ServiceId = null, // Chỉ có sản phẩm, không có dịch vụ
+					Price = product.CostPrice,
+					Quantity = product.Quantity,
+					TotalMoney = totalMoney,
+					Status = "DaThanhToan",
+					Type = "NhapHang",
+					DeleteStatus = false
+				};
+
+				await _invoiceDetailsRepository.CreateEntity(detail);
+				_logger.LogInformation("Created purchase invoice detail: ProductId {ProductId}, Quantity {Quantity}, Total {Total}", 
+					newProduct.Id, product.Quantity, totalMoney);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error creating purchase invoice for product: {ProductName}", newProduct.ProductName);
+				// Không throw exception để không làm fail việc tạo product
+				// Có thể xem xét rollback product nếu cần thiết
 			}
 		}
 
@@ -289,6 +354,11 @@ namespace Aesthetics.Data.AestheticsServices
 				if (product.CostPrice.HasValue)
 				{
 					existingProduct.CostPrice = product.CostPrice.Value;
+				}
+
+				if (product.Status != null)
+				{
+					existingProduct.Status = product.Status;
 				}
 
 				var updated = await _productRepository.UpdateEntity(existingProduct);

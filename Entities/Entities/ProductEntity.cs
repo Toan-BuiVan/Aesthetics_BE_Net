@@ -43,6 +43,8 @@ namespace Aesthetics.Entities.Entities
 
 		/// <summary>Giá vốn (giá nhập) → tính lợi nhuận</summary>
 		[Column(TypeName = "decimal(18,2)")]
+
+		public string? Status { get; set; }
 		public decimal? CostPrice { get; set; }
 
 		// Navigation properties
