@@ -52,6 +52,7 @@ namespace Aesthetics.Entities.Models.RequestModel
 		public string? ProductImages { get; set; }
 
 		public decimal? CostPrice { get; set; } 
+		public string? Status { get; set; }
 	}
 
 	public class deleteProduct
