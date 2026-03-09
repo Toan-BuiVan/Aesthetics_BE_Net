@@ -27,6 +27,11 @@ namespace Aesthetics.Data.AestheticsInterfaces.EmailService
 		/// Gửi email nhắc nhở lịch hẹn sắp đến
 		/// </summary>
 		Task<bool> SendAppointmentReminder(string customerEmail, string customerName, string serviceName, DateTime appointmentTime, string staffName);
+
+		/// <summary>
+		/// Gửi email thông báo hủy lịch hẹn
+		/// </summary>
+		Task<bool> SendAppointmentCancellation(string customerEmail, string customerName, string serviceName, DateTime appointmentTime, string staffName);
 	}
 }
 
