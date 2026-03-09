@@ -40,7 +40,7 @@ namespace Aesthetics.Data.AestheticsServices
 			_inventoryAlertService = inventoryAlertService;
 		}
 
-		public async Task<bool> update(RequestCustomerTreatmentSessions requestCustomer)
+		public async Task<bool> update(UpdateCustomerTreatmentSessions requestCustomer)
 		{
 			try
 			{
@@ -301,5 +301,53 @@ namespace Aesthetics.Data.AestheticsServices
 				_logger.LogError(ex, "UpdateProductStock: Exception for ProductId {ProductId}", productId);
 			}
 		}
+
+		public async Task<bool> delete(DeleteCustomerTreatmentSessions requestCustomer)
+		{
+			try
+			{
+				// 1. Validate input
+				if (!requestCustomer.Id.HasValue)
+				{
+					_logger.LogWarning("DeleteCustomerTreatmentSession: Missing Id");
+					return false;
+				}
+
+				// 2. Find the session
+				var existingSession = await _customerTreatmentSessionsRepository.GetById(requestCustomer.Id.Value);
+				if (existingSession == null || existingSession.DeleteStatus)
+				{
+					_logger.LogWarning("DeleteCustomerTreatmentSession: Not found or already deleted Id {Id}", requestCustomer.Id);
+					return false;
+				}
+
+				// 3. Soft delete the session
+				var deleted = await _customerTreatmentSessionsRepository.DeleteEntitiesStatus(existingSession);
+				if (!deleted)
+				{
+					_logger.LogError("DeleteCustomerTreatmentSession: Failed at repository level for Id {Id}", requestCustomer.Id);
+					return false;
+				}
+
+				// 4. Update parent plan status if needed
+				if (existingSession.CustomerTreatmentPlanId.HasValue)
+				{
+					await UpdateCustomerTreatmentPlanStatus(
+						existingSession.CustomerTreatmentPlanId.Value,
+						existingSession.Status,
+						null
+					);
+				}
+
+				_logger.LogInformation("DeleteCustomerTreatmentSession: Success for Id {Id}", requestCustomer.Id);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "DeleteCustomerTreatmentSession: Exception for Id {Id}", requestCustomer.Id);
+				return false;
+			}
+		}
+
 	}
 }

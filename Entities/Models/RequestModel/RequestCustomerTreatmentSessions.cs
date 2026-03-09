@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Aesthetics.Entities.Models.RequestModel
 {
-    public class RequestCustomerTreatmentSessions
+    public class UpdateCustomerTreatmentSessions
     {
 		public int? Id { get; set; }
 		/// <summary>
@@ -21,5 +21,10 @@ namespace Aesthetics.Entities.Models.RequestModel
 		/// 
 
 		public string? Status { get; set; }
+	}
+
+	public class DeleteCustomerTreatmentSessions
+	{
+		public int? Id { get; set; }
 	}
 }
