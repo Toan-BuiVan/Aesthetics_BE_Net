@@ -264,8 +264,8 @@ namespace Aesthetics.Data.AestheticsServices
 					DateCreated = DateTime.UtcNow,
 					Status = invoiceStatus,
 					Type = "BanHang",
-					OrderStatus = "DangXuLy",
-					PaymentMethod = "TienMat",
+					OrderStatus = invoiceStatus,
+					PaymentMethod = appointment.PaymentMethod,
 					DiscountValue = discountValue, // *** THÊM MỚI: Lưu số tiền giảm giá ***
 					DeleteStatus = false
 				};

@@ -26,6 +26,9 @@ namespace Aesthetics.Entities.Entities
 		/// <summary>FK → Services: dịch vụ</summary>
 		public int? ServiceId { get; set; }
 
+		/// <summary>FK → Product: sản phẩm</summary>
+		public int? ProductId  { get; set; }
+
 		/// <summary>Phần trăm giảm giá thực tế</summary>
 		[Column(TypeName = "decimal(5,2)")]
 		public decimal DiscountValue { get; set; }

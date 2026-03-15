@@ -17,6 +17,7 @@ namespace Aesthetics.Entities.Models.RequestModel
 		public decimal? PaidAmount { get; set; }
 		public int? CustomerTreatmentPlanId { get; set; }
 		public int? VoucherId { get; set; }
+		public string? PaymentMethod { get; set; }
 	}
 
 	public class DeleteAppointment
