@@ -71,14 +71,6 @@ namespace Aesthetics.Data.AestheticsServices
 				if (!pricing.IsValid)
 					return false;
 
-				int? invoiceId = null;
-
-				if (request.TypeInvoice.HasValue &&
-					request.TypeInvoice != EnumTreatmentPlans.PayAfterService)
-				{
-					invoiceId = await CreateInvoiceAsync(request, pricing);
-				}
-
 				/*
 					-- ChoDatLich: Chờ đặt lịch khám
 					-- DangThucHien: đang chạy liệu trình
@@ -94,7 +86,6 @@ namespace Aesthetics.Data.AestheticsServices
 					StartDate = request.StartDate ?? DateTime.UtcNow,
 					CompletedSessions = 0,
 					Status = "ChoDatLich",
-					InvoiceId = invoiceId,
 					Notes = request.Notes,
 					DeleteStatus = false
 				};
@@ -135,6 +126,54 @@ namespace Aesthetics.Data.AestheticsServices
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "DeleteCustomerTreatment: exception");
+				return false;
+			}
+		}
+
+		public async Task<bool> update(UpdateCustomerTreatment request)
+		{
+			try
+			{
+				var existing = await _customerTreatmentPlansRepository.GetById(request.Id.Value);
+				if (existing == null)
+				{
+					_logger.LogWarning("UpdateCustomerTreatment: not found id={Id}", request.Id);
+					return false;
+				}
+
+				bool hasChanges = false;
+				string oldStatus = existing.Status;
+
+				if (!string.IsNullOrWhiteSpace(request.Status) && existing.Status != request.Status)
+				{
+					existing.Status = request.Status;
+					hasChanges = true;
+				}
+
+				if (!hasChanges)
+				{
+					_logger.LogInformation("UpdateCustomerTreatment: No changes detected for Id {Id}", request.Id);
+					return true;
+				}
+
+				var updated = await _customerTreatmentPlansRepository.UpdateEntity(existing);
+				if (!updated)
+				{
+					_logger.LogError("UpdateCustomerTreatment: Failed at repository level for Id {Id}", request.Id);
+					return false;
+				}
+
+				if (request.Status != oldStatus)
+				{
+					await UpdateCustomerTreatmentSessionStatuses(existing.Id, request.Status, oldStatus);
+				}
+
+				_logger.LogInformation("UpdateCustomerTreatment: Success for Id {Id}", request.Id);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "UpdateCustomerTreatment: Exception for Id {Id}", request.Id);
 				return false;
 			}
 		}
@@ -225,111 +264,6 @@ namespace Aesthetics.Data.AestheticsServices
 			return (true, plan.Price ?? 0, null);
 		}
 
-		private async Task<int?> CreateInvoiceAsync(
-			CreateCustomerTreatment request,
-			(bool IsValid, decimal Price, int? ServiceId) pricing)
-		{
-			decimal totalMoney = pricing.Price;
-
-			decimal paidAmount = request.TypeInvoice switch
-			{
-				EnumTreatmentPlans.PayInAdvance => totalMoney,
-				EnumTreatmentPlans.PartialPayment => request.PaidAmount ?? 0,
-				_ => 0
-			};
-
-			if (request.TypeInvoice == EnumTreatmentPlans.PartialPayment && paidAmount <= 0)
-				return null;
-
-			string status = GetInvoiceStatus(paidAmount, totalMoney);
-
-			var invoice = new InvoiceEntity
-			{
-				CustomerId = request.CustomerId.Value,
-				StaffId = request.StaffId ?? 0,
-				TotalMoney = totalMoney,
-				PaidAmount = paidAmount,
-				OutstandingBalance = totalMoney - paidAmount,
-				DateCreated = DateTime.UtcNow,
-				Status = status,
-				Type = "BanHang",
-				OrderStatus = "DichVu",
-				DeleteStatus = false
-			};
-
-			await _invoiceRepository.CreateEntity(invoice);
-
-			var detail = new InvoiceDetailEntity
-			{
-				InvoiceId = invoice.Id,
-				ServiceId = pricing.ServiceId,
-				TreatmentPlanId = request.TreatmentPlanId,
-				Price = pricing.Price,
-				Quantity = 1,
-				TotalMoney = pricing.Price,
-				Status = status,
-				Type = "BanHang",
-				DeleteStatus = false
-			};
-
-			await _invoiceDetailsRepository.CreateEntity(detail);
-
-			// Tạo PerformanceLog khi thanh toán PayInAdvance hoặc PartialPayment và có StaffId
-			if ((request.TypeInvoice == EnumTreatmentPlans.PayInAdvance ||
-				 request.TypeInvoice == EnumTreatmentPlans.PartialPayment) &&
-				request.StaffId.HasValue && request.StaffId.Value > 0)
-			{
-				await CreatePerformanceLogAsync(invoice.Id, request.StaffId.Value, totalMoney);
-			}
-
-			return invoice.Id;
-		}
-
-		/// <summary>
-		/// Tạo PerformanceLog với hoa hồng 5% và thưởng 200,000
-		/// </summary>
-		private async Task CreatePerformanceLogAsync(int invoiceId, int staffId, decimal totalMoney)
-		{
-			try
-			{
-				decimal commissionRate = 0.05m; // 5%
-				decimal bonusAmount = 200000m;
-
-				decimal commissionAmount = totalMoney * commissionRate;
-
-				var performanceLog = new PerformanceLogEntity
-				{
-					InvoiceId = invoiceId,
-					StaffId = staffId,
-					Commission = commissionAmount,
-					Bonus = bonusAmount,
-					LogDate = DateTime.UtcNow,
-					Description = $"Hoa hồng 5% từ hóa đơn #{invoiceId} + thưởng cố định: 200.000/hóa đơn",
-					DeleteStatus = false
-				};
-
-				await _performanceLogRepository.CreateEntity(performanceLog);
-
-				_logger.LogInformation("CreatePerformanceLog: Created for StaffId {StaffId}, InvoiceId {InvoiceId}, Commission: {Commission}, Bonus: {Bonus}",
-					staffId, invoiceId, commissionAmount, bonusAmount);
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError(ex, "CreatePerformanceLog: Exception for StaffId {StaffId}, InvoiceId {InvoiceId}", staffId, invoiceId);
-			}
-		}
-
-		private string GetInvoiceStatus(decimal paid, decimal total)
-		{
-			if (paid == 0)
-				return "ChuaThanhToan";
-
-			if (paid < total)
-				return "ThanhToanMotPhan";
-
-			return "DaThanhToan";
-		}
-
 		private async Task CloneTreatmentSessions(int customerPlanId, int? treatmentPlanId)
 		{
 			if (!treatmentPlanId.HasValue)
@@ -350,54 +284,6 @@ namespace Aesthetics.Data.AestheticsServices
 			}).ToList();
 
 			await _customerTreatmentSessionsRepository.CreateRangeEntities(sessions);
-		}
-
-		public async Task<bool> update(UpdateCustomerTreatment request)
-		{
-			try
-			{
-				var existing = await _customerTreatmentPlansRepository.GetById(request.Id.Value);
-				if (existing == null)
-				{
-					_logger.LogWarning("UpdateCustomerTreatment: not found id={Id}", request.Id);
-					return false;
-				}
-
-				bool hasChanges = false;
-				string oldStatus = existing.Status;
-
-				if (!string.IsNullOrWhiteSpace(request.Status) && existing.Status != request.Status)
-				{
-					existing.Status = request.Status;
-					hasChanges = true;
-				}
-
-				if (!hasChanges)
-				{
-					_logger.LogInformation("UpdateCustomerTreatment: No changes detected for Id {Id}", request.Id);
-					return true;
-				}
-
-				var updated = await _customerTreatmentPlansRepository.UpdateEntity(existing);
-				if (!updated)
-				{
-					_logger.LogError("UpdateCustomerTreatment: Failed at repository level for Id {Id}", request.Id);
-					return false;
-				}
-
-				if (request.Status != oldStatus)
-				{
-					await UpdateCustomerTreatmentSessionStatuses(existing.Id, request.Status, oldStatus);
-				}
-
-				_logger.LogInformation("UpdateCustomerTreatment: Success for Id {Id}", request.Id);
-				return true;
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError(ex, "UpdateCustomerTreatment: Exception for Id {Id}", request.Id);
-				return false;
-			}
 		}
 
 		/// <summary>

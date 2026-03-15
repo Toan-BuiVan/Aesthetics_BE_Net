@@ -30,6 +30,11 @@ namespace Aesthetics.Data.AestheticsServices
 		private readonly IEmailService _emailService;
 		private readonly ICustomerRepository _customerRepository;
 		private readonly IStaffRepository _staffRepository;
+		private readonly IInvoiceRepository _invoiceRepository;
+		private readonly IInvoiceDetailsRepository _invoiceDetailsRepository;
+		private readonly IPerformanceLogRepository _performanceLogRepository;
+		private readonly IVoucherRepository _voucherRepository;
+		private readonly IWalletRepository _walletRepository;
 
 		// Constants for better maintainability
 		private const int MAX_DOCTOR_DAILY_LIMIT = 10;  // Giới hạn bác sĩ
@@ -47,7 +52,12 @@ namespace Aesthetics.Data.AestheticsServices
 			ICustomerTreatmentPlansRepository customerTreatmentPlansRepository,
 			IEmailService emailService,
 			ICustomerRepository customerRepository,
-			IStaffRepository staffRepository)
+			IStaffRepository staffRepository, 
+			IInvoiceRepository invoiceRepository,
+			IInvoiceDetailsRepository invoiceDetailsRepository,
+			IPerformanceLogRepository performanceLogRepository,
+			IVoucherRepository voucherRepository,
+			IWalletRepository walletRepository)
 		{
 			_logger = logger;
 			_appointmentRepositoty = appointmentRepositoty;
@@ -61,6 +71,11 @@ namespace Aesthetics.Data.AestheticsServices
 			_emailService = emailService;
 			_customerRepository = customerRepository;
 			_staffRepository = staffRepository;
+			_invoiceRepository = invoiceRepository;
+			_invoiceDetailsRepository = invoiceDetailsRepository;
+			_performanceLogRepository = performanceLogRepository;
+			_voucherRepository = voucherRepository;
+			_walletRepository = walletRepository;
 		}
 
 		public async Task<bool> create(CreateAppointment appointment)
@@ -99,11 +114,11 @@ namespace Aesthetics.Data.AestheticsServices
 
 				// 5. Perform all validations
 				var validationTasks = new List<Task<bool>>
-				{
-					ValidateDoctorLimits(appointment.StaffId.Value, serviceId, service, appointmentDate),
-					ValidateClinicLimits(clinicId, appointmentDate),
-					ValidateTimeLocks(clinicId, appointment.StartTime.Value)
-				};
+			{
+				ValidateDoctorLimits(appointment.StaffId.Value, serviceId, service, appointmentDate),
+				ValidateClinicLimits(clinicId, appointmentDate),
+				ValidateTimeLocks(clinicId, appointment.StartTime.Value)
+			};
 
 				var validationResults = await Task.WhenAll(validationTasks);
 				if (validationResults.Any(result => !result))
@@ -139,7 +154,24 @@ namespace Aesthetics.Data.AestheticsServices
 					_logger.LogWarning("Create AppointmentAssignment failed for AppointmentId {AppointmentId}", appointmentEntity.Id);
 				}
 
-				// 9. Send confirmation email (fire and forget)
+				// 9. *** THÊM MỚI: Tạo hóa đơn và chi tiết hóa đơn ***
+				if (appointment.TypeInvoice.HasValue && appointment.TypeInvoice != EnumTreatmentPlans.PayAfterService)
+				{
+					var invoiceId = await CreateInvoiceForAppointmentAsync(appointment, service, appointmentEntity.Id);
+					if (invoiceId.HasValue)
+					{
+						// Cập nhật trạng thái thanh toán của appointment nếu đã thanh toán
+						if (appointment.TypeInvoice == EnumTreatmentPlans.PayInAdvance)
+						{
+							appointmentEntity.PaymentStatus = true;
+							await _appointmentRepositoty.UpdateEntity(appointmentEntity);
+						}
+
+						_logger.LogInformation("Created Invoice {InvoiceId} for AppointmentId {AppointmentId}", invoiceId, appointmentEntity.Id);
+					}
+				}
+
+				// 10. Send confirmation email (fire and forget)
 				_ = Task.Run(async () => await SendConfirmationEmail(appointmentEntity));
 
 				_logger.LogInformation("Create Appointment success for CustomerId {CustomerId} with ServiceId {ServiceId} at ClinicId {ClinicId}",
@@ -153,6 +185,308 @@ namespace Aesthetics.Data.AestheticsServices
 				return false;
 			}
 		}
+
+		#region Invoice Creation Methods
+
+		/// <summary>
+		/// Tạo hóa đơn và chi tiết hóa đơn cho appointment (có hỗ trợ voucher)
+		/// </summary>
+		private async Task<int?> CreateInvoiceForAppointmentAsync(CreateAppointment appointment, ServiceEntity service, int appointmentId)
+		{
+			try
+			{
+				// Xác định giá và treatment plan
+				decimal servicePrice = service.Price ?? 0;
+				int? treatmentPlanId = null;
+
+				// Nếu có CustomerTreatmentPlanId, lấy thông tin treatment plan
+				if (appointment.CustomerTreatmentPlanId.HasValue)
+				{
+					var customerTreatmentPlan = await _customerTreatmentPlansRepository.GetById(appointment.CustomerTreatmentPlanId.Value);
+					treatmentPlanId = customerTreatmentPlan?.TreatmentPlanId;
+
+					if (treatmentPlanId.HasValue)
+					{
+						var treatmentPlan = await _treatmentPlanRepository.GetById(treatmentPlanId.Value);
+						if (treatmentPlan?.Price.HasValue == true)
+						{
+							servicePrice = treatmentPlan.Price.Value;
+						}
+					}
+				}
+
+				// *** THÊM MỚI: Áp dụng voucher nếu có ***
+				decimal discountValue = 0;
+				int? appliedVoucherId = null;
+
+				if (appointment.VoucherId.HasValue)
+				{
+					var voucherResult = await ApplyVoucherAsync(appointment.VoucherId.Value, appointment.CustomerId.Value, servicePrice);
+					if (voucherResult.IsValid)
+					{
+						discountValue = voucherResult.DiscountAmount;
+						appliedVoucherId = appointment.VoucherId.Value;
+						_logger.LogInformation("Applied voucher {VoucherId} with discount {Discount:C} for CustomerId {CustomerId}",
+							appointment.VoucherId, discountValue, appointment.CustomerId);
+					}
+					else
+					{
+						_logger.LogWarning("Failed to apply voucher {VoucherId} for CustomerId {CustomerId}: {Reason}",
+							appointment.VoucherId, appointment.CustomerId, voucherResult.ErrorMessage);
+					}
+				}
+
+				// Tính toán giá sau giảm giá
+				decimal finalPrice = servicePrice - discountValue;
+
+				// Tính toán số tiền thanh toán
+				decimal paidAmount = appointment.TypeInvoice switch
+				{
+					EnumTreatmentPlans.PayInAdvance => finalPrice, // Trả trước toàn bộ (sau giảm giá)
+					EnumTreatmentPlans.PartialPayment => Math.Min(appointment.PaidAmount ?? 0, finalPrice), // Trả một phần, không vượt quá tổng tiền
+					_ => 0
+				};
+
+				// Xác định trạng thái hóa đơn
+				string invoiceStatus = GetInvoiceStatus(paidAmount, finalPrice);
+
+				// Tạo hóa đơn
+				var invoice = new InvoiceEntity
+				{
+					CustomerId = appointment.CustomerId.Value,
+					StaffId = appointment.StaffId.Value,
+					ServiceId = service.Id,
+					VoucherId = appliedVoucherId, // *** THÊM MỚI: Lưu VoucherId đã áp dụng ***
+					TreatmentPlanId = treatmentPlanId,
+					TotalMoney = finalPrice, // Tổng tiền sau giảm giá
+					PaidAmount = paidAmount,
+					OutstandingBalance = finalPrice - paidAmount,
+					DateCreated = DateTime.UtcNow,
+					Status = invoiceStatus,
+					Type = "BanHang",
+					OrderStatus = "DangXuLy",
+					PaymentMethod = "TienMat",
+					DiscountValue = discountValue, // *** THÊM MỚI: Lưu số tiền giảm giá ***
+					DeleteStatus = false
+				};
+
+				var invoiceCreated = await _invoiceRepository.CreateEntity(invoice);
+				if (!invoiceCreated)
+				{
+					_logger.LogError("CreateInvoiceForAppointment: Failed to create invoice for AppointmentId {AppointmentId}", appointmentId);
+					return null;
+				}
+
+				// Tạo chi tiết hóa đơn
+				var invoiceDetail = new InvoiceDetailEntity
+				{
+					InvoiceId = invoice.Id,
+					ProductId = null, // Vì đây là dịch vụ, không phải sản phẩm
+					ServiceId = service.Id,
+					TreatmentPlanId = treatmentPlanId,
+					VoucherId = appliedVoucherId, // Nếu có voucher áp dụng cho dòng này
+					DiscountValue = discountValue, // Số tiền giảm giá (hoặc phần trăm, tùy logic)
+					Price = servicePrice, // Giá gốc trước giảm giá
+					Quantity = 1,
+					TotalMoney = finalPrice, // Tổng tiền sau giảm giá
+					Status = invoiceStatus, // Hoặc "DangCho" tùy trạng thái xử lý
+					Type = "Ban", // "Ban" = bán hàng, "Nhap" = nhập hàng
+					StatusComment = false, // Mặc định chưa đánh giá
+					DeleteStatus = false
+				};
+
+
+				var detailCreated = await _invoiceDetailsRepository.CreateEntity(invoiceDetail);
+				if (!detailCreated)
+				{
+					_logger.LogWarning("CreateInvoiceForAppointment: Failed to create invoice detail for InvoiceId {InvoiceId}", invoice.Id);
+				}
+
+				// *** THÊM MỚI: Đánh dấu voucher đã sử dụng ***
+				if (appliedVoucherId.HasValue)
+				{
+					await MarkVoucherAsUsedAsync(appliedVoucherId.Value, appointment.CustomerId.Value);
+				}
+
+				// Tạo performance log cho nhân viên nếu có thanh toán
+				if (paidAmount > 0 && appointment.StaffId.HasValue)
+				{
+					await CreatePerformanceLogAsync(invoice.Id, appointment.StaffId.Value, finalPrice);
+				}
+
+				return invoice.Id;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "CreateInvoiceForAppointment: Exception for AppointmentId {AppointmentId}", appointmentId);
+				return null;
+			}
+		}
+
+		private string GetInvoiceStatus(decimal paidAmount, decimal totalAmount)
+		{
+			if (paidAmount >= totalAmount)
+				return "DaThanhToan";    // Đã thanh toán đủ
+			if (paidAmount > 0)
+				return "ThanhToanMotPhan";  // Thanh toán một phần (hoặc có thể dùng "ChuaThanhToanDu")
+			return "ChuaThanhToan";     // Chưa thanh toán
+		}
+
+		private async Task CreatePerformanceLogAsync(int invoiceId, int staffId, decimal totalAmount)
+		{
+			try
+			{
+				// Tính hoa hồng: 1.5% tổng hóa đơn
+				decimal commission = totalAmount * 0.015m; // 1.5%
+
+				// Tính thưởng dựa trên tổng tiền hóa đơn
+				decimal bonus = totalAmount > 10_000_000m ? 500_000m : 200_000m;
+
+				var log = new PerformanceLogEntity
+				{
+					InvoiceId = invoiceId,
+					StaffId = staffId,
+					Commission = commission,
+					Bonus = bonus,
+					LogDate = DateTime.UtcNow,
+					Description = $"Hoa hồng {commission:N0} VNĐ (1.5%) và thưởng {bonus:N0} VNĐ từ hóa đơn #{invoiceId} - Tổng: {totalAmount:N0} VNĐ",
+					DeleteStatus = false
+				};
+
+				var created = await _performanceLogRepository.CreateEntity(log);
+				if (created)
+				{
+					_logger.LogInformation("CreatePerformanceLog: Created for StaffId {StaffId}, InvoiceId {InvoiceId} - Commission: {Commission:C}, Bonus: {Bonus:C}",
+						staffId, invoiceId, commission, bonus);
+				}
+				else
+				{
+					_logger.LogError("CreatePerformanceLog: Failed to create performance log for StaffId {StaffId}, InvoiceId {InvoiceId}",
+						staffId, invoiceId);
+				}
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "CreatePerformanceLogAsync: Exception for InvoiceId {InvoiceId}, StaffId {StaffId}",
+					invoiceId, staffId);
+			}
+		}
+
+
+		#endregion
+
+		#region Voucher Methods
+
+		/// <summary>
+		/// Áp dụng voucher và tính toán giảm giá
+		/// </summary>
+		private async Task<(bool IsValid, decimal DiscountAmount, string ErrorMessage)> ApplyVoucherAsync(int voucherId, int customerId, decimal orderAmount)
+		{
+			try
+			{
+				// 1. Kiểm tra voucher có tồn tại và còn hoạt động
+				var voucher = await _voucherRepository.GetById(voucherId);
+				if (voucher == null || voucher.DeleteStatus)
+				{
+					return (false, 0, "Voucher không tồn tại");
+				}
+
+				if (!voucher.IsActive)
+				{
+					return (false, 0, "Voucher đã bị vô hiệu hóa");
+				}
+
+				// 2. Kiểm tra thời hạn voucher
+				var now = DateTime.UtcNow;
+				if (voucher.StartDate.HasValue && now < voucher.StartDate.Value)
+				{
+					return (false, 0, "Voucher chưa có hiệu lực");
+				}
+
+				if (voucher.EndDate.HasValue && now > voucher.EndDate.Value)
+				{
+					return (false, 0, "Voucher đã hết hạn");
+				}
+
+				// 3. Kiểm tra giá trị đơn hàng tối thiểu
+				if (voucher.MinimumOrderValue.HasValue && orderAmount < voucher.MinimumOrderValue.Value)
+				{
+					return (false, 0, $"Đơn hàng tối thiểu {voucher.MinimumOrderValue.Value:C}");
+				}
+
+				// 4. Kiểm tra khách hàng có voucher trong ví và chưa sử dụng
+				var walletVoucher = await _walletRepository.FindByPredicate(x =>
+					x.CustomerId == customerId &&
+					x.VoucherId == voucherId &&
+					!x.IsUsed &&
+					!x.DeleteStatus);
+
+				var customerVoucher = walletVoucher.FirstOrDefault();
+				if (customerVoucher == null)
+				{
+					return (false, 0, "Voucher không có trong ví hoặc đã được sử dụng");
+				}
+
+				// 5. Tính toán số tiền giảm giá
+				decimal discountAmount = 0;
+				if (voucher.DiscountValue.HasValue)
+				{
+					// Giảm giá theo phần trăm
+					discountAmount = orderAmount * (voucher.DiscountValue.Value / 100);
+
+					// Áp dụng giới hạn giảm giá tối đa nếu có
+					if (voucher.MaxValue.HasValue && discountAmount > voucher.MaxValue.Value)
+					{
+						discountAmount = voucher.MaxValue.Value;
+					}
+				}
+
+				// Đảm bảo số tiền giảm không vượt quá tổng đơn hàng
+				if (discountAmount > orderAmount)
+				{
+					discountAmount = orderAmount;
+				}
+
+				return (true, discountAmount, string.Empty);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "ApplyVoucherAsync: Exception for VoucherId {VoucherId}, CustomerId {CustomerId}", voucherId, customerId);
+				return (false, 0, "Lỗi hệ thống khi áp dụng voucher");
+			}
+		}
+
+		/// <summary>
+		/// Đánh dấu voucher đã được sử dụng
+		/// </summary>
+		private async Task MarkVoucherAsUsedAsync(int voucherId, int customerId)
+		{
+			try
+			{
+				var walletVoucher = await _walletRepository.FindByPredicate(x =>
+					x.CustomerId == customerId &&
+					x.VoucherId == voucherId &&
+					!x.IsUsed &&
+					!x.DeleteStatus);
+
+				var customerVoucher = walletVoucher.FirstOrDefault();
+				if (customerVoucher != null)
+				{
+					customerVoucher.IsUsed = true;
+					await _walletRepository.UpdateEntity(customerVoucher);
+
+					_logger.LogInformation("MarkVoucherAsUsed: VoucherId {VoucherId} marked as used for CustomerId {CustomerId}",
+						voucherId, customerId);
+				}
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "MarkVoucherAsUsedAsync: Exception for VoucherId {VoucherId}, CustomerId {CustomerId}",
+					voucherId, customerId);
+			}
+		}
+
+		#endregion
 
 		#region Private Helper Methods
 

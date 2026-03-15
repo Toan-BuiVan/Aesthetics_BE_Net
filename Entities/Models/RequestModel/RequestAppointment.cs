@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Aesthetics.Entities.Enum;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,7 +13,10 @@ namespace Aesthetics.Entities.Models.RequestModel
 		public int? StaffId { get; set; }
 		public int? ServiceId { get; set; }
 		public DateTime? StartTime { get; set; }
+		public EnumTreatmentPlans? TypeInvoice { get; set; }
+		public decimal? PaidAmount { get; set; }
 		public int? CustomerTreatmentPlanId { get; set; }
+		public int? VoucherId { get; set; }
 	}
 
 	public class DeleteAppointment

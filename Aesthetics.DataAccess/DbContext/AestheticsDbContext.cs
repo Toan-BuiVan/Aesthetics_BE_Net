@@ -345,12 +345,6 @@ namespace Aesthetics.Data.AestheticsDbContext
 				.HasForeignKey(ctp => ctp.TreatmentPlanId)
 				.OnDelete(DeleteBehavior.Cascade);
 
-			builder.Entity<CustomerTreatmentPlanEntity>()
-				.HasOne(ctp => ctp.Invoice)
-				.WithMany(i => i.CustomerTreatmentPlans)
-				.HasForeignKey(ctp => ctp.InvoiceId)
-				.OnDelete(DeleteBehavior.SetNull);
-
 			builder.Entity<CustomerTreatmentSessionEntity>()
 				.HasOne(cts => cts.CustomerTreatmentPlan)
 				.WithMany(ctp => ctp.CustomerTreatmentSessions)

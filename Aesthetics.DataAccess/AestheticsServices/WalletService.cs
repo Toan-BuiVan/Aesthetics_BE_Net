@@ -117,11 +117,13 @@ namespace Aesthetics.Data.AestheticsServices
 		{
 			try
 			{
-				Expression<Func<WalletEntity, bool>> predicate = x => x.DeleteStatus != true;
+				// Base predicate: not deleted and unused vouchers only
+				Expression<Func<WalletEntity, bool>> predicate = x => x.DeleteStatus != true && x.IsUsed == false;
 
 				if (searchWallet.CustomerId > 0)
 				{
-					predicate = x => x.CustomerId == searchWallet.CustomerId && x.DeleteStatus != true;
+					// When filtering by CustomerId, also include the unused condition
+					predicate = x => x.CustomerId == searchWallet.CustomerId && x.DeleteStatus != true && x.IsUsed == false;
 				}
 
 				var allMatching = await _walletRepository.FindByPredicate(predicate);
@@ -129,7 +131,7 @@ namespace Aesthetics.Data.AestheticsServices
 				var totalCount = allMatching.Count;
 
 				var pagedData = allMatching
-					.OrderBy(x => x.CustomerId)                   
+					.OrderBy(x => x.CustomerId)
 					.Skip((searchWallet.PageNo - 1) * searchWallet.PageSize)
 					.Take(searchWallet.PageSize)
 					.ToList();
@@ -152,5 +154,6 @@ namespace Aesthetics.Data.AestheticsServices
 				);
 			}
 		}
+
 	}
 }

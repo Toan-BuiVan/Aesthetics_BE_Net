@@ -35,9 +35,6 @@ namespace Aesthetics.Entities.Entities
 		[MaxLength(50)]
 		public string? Status { get; set; }
 
-		/// <summary>FK → Invoices: hóa đơn thanh toán gói (nếu trả trước)</summary>
-		public int? InvoiceId { get; set; }
-
 		/// <summary>Ghi chú chung cho liệu trình</summary>
 		public string? Notes { get; set; }
 
@@ -47,9 +44,6 @@ namespace Aesthetics.Entities.Entities
 
 		[ForeignKey(nameof(TreatmentPlanId))]
 		public virtual TreatmentPlanEntity? TreatmentPlan { get; set; }
-
-		[ForeignKey(nameof(InvoiceId))]
-		public virtual InvoiceEntity? Invoice { get; set; }
 
 		public virtual ICollection<CustomerTreatmentSessionEntity> CustomerTreatmentSessions { get; set; } = [];
 		public virtual ICollection<AppointmentEntity> Appointments { get; set; } = [];

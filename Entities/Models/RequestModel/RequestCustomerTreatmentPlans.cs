@@ -8,9 +8,7 @@ namespace Aesthetics.Entities.Models.RequestModel
 		public int? StaffId { get; set; }
 		public int? TreatmentPlanId { get; set; }
 		public DateTime? StartDate { get; set; }
-		public EnumTreatmentPlans? TypeInvoice { get; set; }
 		public bool? IsFullPackage { get; set; }
-		public decimal? PaidAmount { get; set; }
 		public string? Notes { get; set; }
 		public int? VoucherId { get; set; }
 	}
