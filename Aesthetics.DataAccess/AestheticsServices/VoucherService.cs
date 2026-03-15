@@ -109,7 +109,14 @@ namespace Aesthetics.Data.AestheticsServices
 		{
 			try
 			{
-				var allMatching = await _voucherRepository.FindByPredicate(x => x.DeleteStatus != true);
+				// Base predicate: not deleted, active, and currently valid (within date range)
+				DateTime currentDate = DateTime.UtcNow;
+				var allMatching = await _voucherRepository.FindByPredicate(x =>
+					x.DeleteStatus == false &&
+					x.IsActive == true &&
+					(x.StartDate == null || x.StartDate <= currentDate) &&
+					(x.EndDate == null || x.EndDate >= currentDate));
+
 				if (!string.IsNullOrWhiteSpace(voucher.Code))
 				{
 					var code = voucher.Code.ToLower();
@@ -142,10 +149,11 @@ namespace Aesthetics.Data.AestheticsServices
 
 				var totalCount = allMatching.Count;
 				var pagedData = allMatching
-					.OrderBy(x => x.Id )           
+					.OrderBy(x => x.Id)
 					.Skip((voucher.PageNo - 1) * voucher.PageSize)
 					.Take(voucher.PageSize)
 					.ToList();
+
 				return new BaseDataCollection<VoucherEntity>(
 					pagedData,
 					totalCount,
@@ -164,6 +172,7 @@ namespace Aesthetics.Data.AestheticsServices
 				);
 			}
 		}
+
 
 		public async Task<bool> update(UpdateVoucher voucher)
 		{
